@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Gamepad2, Menu, Volume2, VolumeX, X } from 'lucide-react';
 import { sound } from '../utils/audio';
+import logoUrl from '../assets/logo.png';
 
 interface NavbarProps {
   onPlayClick: () => void;
@@ -28,7 +29,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onPlayClick }) => {
       {/* Brand */}
       <a href="#" className="flex items-center gap-3 group" onClick={() => sound.playClick(800)}>
         <img
-          src="/logo.png"
+          src={logoUrl}
           alt="SKYLINK Logo"
           className="w-11 h-11 rounded-full object-cover shadow-md group-hover:rotate-6 transition-transform border-2 border-white"
         />

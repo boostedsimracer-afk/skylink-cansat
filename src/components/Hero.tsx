@@ -1,6 +1,7 @@
 import React from 'react';
 import { Gamepad2, Sparkles, Trophy } from 'lucide-react';
 import { sound } from '../utils/audio';
+import logoUrl from '../assets/logo.png';
 
 interface HeroProps {
   onPlayClick: () => void;
@@ -25,7 +26,7 @@ export const Hero: React.FC<HeroProps> = ({ onPlayClick }) => {
 
       {/* Minimal subline - strictly 1-2 friendly sentences, zero walls of text */}
       <p className="text-slate-600 text-base sm:text-lg max-w-lg mx-auto mb-8 font-medium">
-        Play our 3 space physics games, land on the target, and take home real prizes from our outreach booth! 🚀
+        Play our 5 space physics games, land on the target, and take home real prizes from our outreach booth! 🚀
       </p>
 
       {/* Cute Bubbly Action Buttons */}
@@ -59,7 +60,7 @@ export const Hero: React.FC<HeroProps> = ({ onPlayClick }) => {
         {/* Floating Patch */}
         <div className="relative z-10 w-44 h-44 sm:w-52 sm:h-52 rounded-full overflow-hidden shadow-2xl border-4 border-white bg-[#181C24] p-1 animate-bounce" style={{ animationDuration: '4s' }}>
           <img
-            src="/logo.png"
+            src={logoUrl}
             alt="SKYLINK Logo"
             className="w-full h-full object-cover rounded-full"
           />
