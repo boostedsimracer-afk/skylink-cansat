@@ -1,0 +1,229 @@
+import React, { useState } from 'react';
+import { Crown, Key, Search } from 'lucide-react';
+import type { GameId, LeaderboardEntry } from '../types';
+import { sound } from '../utils/audio';
+
+interface LeaderboardSectionProps {
+  entries: LeaderboardEntry[];
+  onOpenGame: (gameId: GameId) => void;
+  onOpenAdmin: () => void;
+}
+
+export const LeaderboardSection: React.FC<LeaderboardSectionProps> = ({
+  entries,
+  onOpenGame,
+  onOpenAdmin,
+}) => {
+  const [selectedTab, setSelectedTab] = useState<'all' | GameId>('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+
+  const tabs: { id: 'all' | GameId; label: string; emoji: string }[] = [
+    { id: 'all', label: 'Overall', emoji: '🌟' },
+    { id: 'flappy', label: 'Flappy', emoji: '🪂' },
+    { id: 'descent', label: 'Can-Drop', emoji: '🌪️' },
+    { id: 'telemetry', label: 'Telemetry', emoji: '📡' },
+    { id: 'lander', label: 'Lander', emoji: '🎯' },
+    { id: 'collector', label: 'Catcher', emoji: '⚡' },
+  ];
+
+  const filteredEntries = entries
+    .filter(entry => {
+      if (selectedTab !== 'all' && entry.gameId !== selectedTab) return false;
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        return (
+          entry.playerName.toLowerCase().includes(q) ||
+          entry.callsign.toLowerCase().includes(q)
+        );
+      }
+      return true;
+    })
+    .sort((a, b) => b.score - a.score);
+
+  const top1 = filteredEntries[0];
+  const top2 = filteredEntries[1];
+  const top3 = filteredEntries[2];
+  const remaining = filteredEntries.slice(3);
+
+  const getGameLabel = (id: GameId) => {
+    switch (id) {
+      case 'flappy': return 'Flappy CanSat';
+      case 'descent': return 'Can-Drop';
+      case 'telemetry': return 'Telemetry Jam';
+      case 'lander': return 'Target Touchdown';
+      case 'collector': return 'Data Catcher';
+      default: return id;
+    }
+  };
+
+  return (
+    <section id="leaderboard" className="py-14 px-4 sm:px-12 max-w-4xl mx-auto">
+      {/* Header */}
+      <div className="text-center mb-8">
+        <h2 className="text-3xl sm:text-5xl font-bubbly font-bold text-slate-900 tracking-tight mb-2">
+          Live Leaderboard 🏆
+        </h2>
+        <p className="text-slate-500 text-xs sm:text-sm font-medium">
+          Play games, set new high scores, and win prizes for Overall Top 3 & Game 1st Places!
+        </p>
+      </div>
+
+      {/* Tabs and Controls */}
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-8">
+        {/* Pills */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full">
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => {
+                sound.playClick(700);
+                setSelectedTab(tab.id);
+              }}
+              className={`px-3.5 py-1.5 rounded-full font-bubbly text-xs font-semibold transition-all shrink-0 cursor-pointer ${
+                selectedTab === tab.id
+                  ? 'bg-rose-500 text-white shadow-sm'
+                  : 'bg-white text-slate-600 hover:bg-slate-50 border border-rose-100'
+              }`}
+            >
+              <span>{tab.emoji}</span> {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Organizer Key */}
+        <button
+          onClick={() => {
+            sound.playClick(600);
+            onOpenAdmin();
+          }}
+          className="px-4 py-1.5 bg-white text-slate-700 hover:text-slate-900 rounded-full font-bubbly text-xs font-semibold border border-rose-100 shadow-sm flex items-center gap-1.5 cursor-pointer bubble-btn"
+        >
+          <Key size={13} className="text-rose-500" />
+          <span>Organizer Desk</span>
+        </button>
+      </div>
+
+      {/* Empty State when no scores submitted yet */}
+      {filteredEntries.length === 0 ? (
+        <div className="bg-white/90 border border-rose-100 rounded-[36px] p-10 text-center shadow-sm">
+          <span className="text-5xl mb-3 block animate-bounce">🚀</span>
+          <h3 className="font-bubbly text-2xl font-bold text-slate-900 mb-2">
+            No Flights Logged Yet!
+          </h3>
+          <p className="text-slate-500 text-xs sm:text-sm font-medium max-w-sm mx-auto mb-6">
+            Be the very first pilot to play a game and claim the #1 spot on the live leaderboard!
+          </p>
+          <button
+            onClick={() => onOpenGame(selectedTab === 'all' ? 'flappy' : selectedTab)}
+            className="px-7 py-3 bg-rose-500 hover:bg-rose-600 text-white font-bubbly font-bold rounded-full shadow-md bubble-btn text-xs uppercase tracking-wider cursor-pointer"
+          >
+            Launch First Flight 🎮
+          </button>
+        </div>
+      ) : (
+        <>
+          {/* Top 3 Podium when scores exist */}
+          <div className="grid grid-cols-3 gap-3 items-end mb-8 text-center font-bubbly">
+            {/* 2nd Place */}
+            {top2 ? (
+              <div className="bg-white/80 border border-slate-200/90 rounded-[28px] p-4 flex flex-col items-center shadow-sm">
+                <span className="text-2xl mb-1">🥈</span>
+                <span className="text-xs font-bold text-slate-800 truncate max-w-full">
+                  {top2.callsign}
+                </span>
+                <span className="text-sm font-extrabold text-slate-900 font-mono mt-0.5">
+                  {top2.score.toLocaleString()}
+                </span>
+                <span className="text-[10px] text-slate-500 mt-1 font-sans">
+                  {selectedTab === 'all' ? 'Overall 2nd Prize' : 'Runner-Up'}
+                </span>
+              </div>
+            ) : <div />}
+
+            {/* 1st Place */}
+            {top1 && (
+              <div className="bg-white border-2 border-rose-400 rounded-[32px] p-5 flex flex-col items-center shadow-lg -translate-y-2">
+                <div className="w-8 h-8 rounded-full bg-rose-500 flex items-center justify-center text-white mb-1 shadow">
+                  <Crown size={16} />
+                </div>
+                <span className="text-sm font-bold text-slate-900 truncate max-w-full">
+                  {top1.callsign}
+                </span>
+                <span className="text-base font-extrabold text-rose-600 font-mono mt-0.5">
+                  {top1.score.toLocaleString()}
+                </span>
+                <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full mt-1.5 font-sans">
+                  🏆 {selectedTab === 'all' ? 'Overall 1st Prize' : 'Game 1st Prize'}
+                </span>
+              </div>
+            )}
+
+            {/* 3rd Place */}
+            {top3 ? (
+              <div className="bg-white/80 border border-slate-200/90 rounded-[28px] p-4 flex flex-col items-center shadow-sm">
+                <span className="text-2xl mb-1">🥉</span>
+                <span className="text-xs font-bold text-slate-800 truncate max-w-full">
+                  {top3.callsign}
+                </span>
+                <span className="text-sm font-extrabold text-slate-900 font-mono mt-0.5">
+                  {top3.score.toLocaleString()}
+                </span>
+                <span className="text-[10px] text-slate-500 mt-1 font-sans">
+                  {selectedTab === 'all' ? 'Overall 3rd Prize' : '3rd Place'}
+                </span>
+              </div>
+            ) : <div />}
+          </div>
+
+          {/* Clean List */}
+          <div className="bg-white/90 border border-rose-100 rounded-[32px] p-4 sm:p-6 shadow-sm">
+            {/* Search */}
+            <div className="relative mb-4">
+              <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search by callsign or name..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="w-full bg-[#FAF3F4] border border-rose-100 rounded-full pl-9 pr-4 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-rose-400 font-sans"
+              />
+            </div>
+
+            {/* Remaining Rows */}
+            <div className="divide-y divide-rose-50">
+              {remaining.map((entry, idx) => (
+                <div
+                  key={entry.id || idx}
+                  className="py-3 px-3 flex items-center justify-between hover:bg-rose-50/50 rounded-2xl transition-colors font-sans text-xs"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="font-bubbly font-bold text-slate-400 w-5 text-center">
+                      #{idx + 4}
+                    </span>
+                    <div>
+                      <span className="font-bold text-slate-800 font-bubbly text-sm">
+                        {entry.callsign}
+                      </span>
+                      <span className="text-[10px] text-slate-400 block font-sans">
+                        {getGameLabel(entry.gameId)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="text-right">
+                    <span className="font-extrabold text-slate-900 font-mono text-sm block">
+                      {entry.score.toLocaleString()} pts
+                    </span>
+                    <span className="text-[10px] text-slate-400">
+                      {entry.schoolOrOrg || 'Independent'}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+    </section>
+  );
+};

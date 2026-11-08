@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    @apply bg-[#0e1017] text-slate-800 antialiased min-h-screen;
+    font-family: 'Quicksand', system-ui, -apple-system, sans-serif;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4, h5, h6, .font-bubbly {
+    font-family: 'Fredoka', 'Quicksand', cursive, sans-serif;
+  }
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #0e1017;
+}
+::-webkit-scrollbar-thumb {
+  background: #f43f5e;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #e11d48;
+}
+
+/* Glowing device frame like the uploaded image */
+.glow-frame {
+  background: #FBF0F2;
+  border: 1.5px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 
+    0 0 35px rgba(244, 63, 94, 0.35),
+    0 0 80px rgba(244, 63, 94, 0.18),
+    0 25px 50px -12px rgba(0, 0, 0, 0.35);
+  border-radius: 40px;
+}
+
+@media (min-width: 768px) {
+  .glow-frame {
+    border-radius: 48px;
+  }
+}
+
+/* Ambient light ribbons */
+.ambient-glow {
+  background: radial-gradient(circle at 50% 30%, rgba(244, 63, 94, 0.22) 0%, rgba(225, 29, 72, 0.05) 50%, transparent 75%);
+}
+
+/* Bubbly button bounce */
+.bubble-btn {
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.bubble-btn:hover {
+  transform: translateY(-2px) scale(1.02);
+}
+.bubble-btn:active {
+  transform: translateY(1px) scale(0.97);
+}
