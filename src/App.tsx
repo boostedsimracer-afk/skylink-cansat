@@ -8,7 +8,6 @@ import { Hero } from './components/Hero';
 import { ArcadeSection } from './components/ArcadeSection';
 import { LeaderboardSection } from './components/LeaderboardSection';
 import { PrizeSection } from './components/PrizeSection';
-import { BlogSection } from './components/BlogSection';
 import { BlogPage } from './components/BlogPage';
 import { CanSatViewer } from './components/CanSatViewer';
 import { AboutCanSat } from './components/AboutCanSat';
@@ -139,10 +138,7 @@ export function AppContent() {
               {/* 4. Prizes Pool */}
               <PrizeSection />
 
-              {/* 5. Mission Log & Outreach Blog Preview */}
-              <BlogSection onOpenFullBlog={() => handleSelectView('blog')} />
-
-              {/* 6. What's Inside CanSat */}
+              {/* 5. What's Inside CanSat */}
               <CanSatViewer />
 
               {/* 7. How it Works (5 Steps) */}

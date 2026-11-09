@@ -4,9 +4,7 @@ import {
   Calendar,
   CheckCircle2,
   Compass,
-  ExternalLink,
   Layers,
-  Mail,
   PlusCircle,
   Rocket,
   Search,
@@ -151,8 +149,8 @@ export const BlogPage: React.FC<BlogPageProps> = ({ onBackToArcade }) => {
 
   return (
     <div className="w-full font-sans pb-16">
-      {/* Top Banner Navigation */}
-      <div className="pt-6 pb-4 px-6 sm:px-12 flex flex-wrap items-center justify-between border-b border-rose-100/80 gap-3">
+      {/* Top Banner Navigation - Ultra Clean & Minimal */}
+      <div className="pt-6 pb-4 px-6 sm:px-12 flex items-center justify-between border-b border-rose-100/60">
         <button
           onClick={() => {
             sound.playClick(800);
@@ -161,62 +159,40 @@ export const BlogPage: React.FC<BlogPageProps> = ({ onBackToArcade }) => {
           className="px-4 py-2 bg-white hover:bg-slate-50 text-slate-800 font-bubbly font-bold rounded-full border border-rose-200/80 shadow-sm flex items-center gap-2 cursor-pointer text-xs sm:text-sm bubble-btn"
         >
           <ArrowLeft size={16} className="text-rose-500" />
-          <span>Back to Arcade & Games</span>
+          <span>Back to Home</span>
         </button>
 
-        {/* Quick Contact & Linktree Action Pills */}
-        <div className="flex flex-wrap items-center gap-2">
-          <a
-            href="https://linktr.ee/qr/2a450f9d-f8f9-4041-bca6-d3176b9d65b6"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-3.5 py-1.5 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-bubbly text-xs font-bold shadow-sm flex items-center gap-1.5 transition-all"
-          >
-            <span>🌲</span>
-            <span>Linktree</span>
-            <ExternalLink size={12} className="opacity-70" />
-          </a>
-
-          <a
-            href="mailto:skylinkutb@gmail.com"
-            className="px-3.5 py-1.5 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bubbly text-xs font-bold shadow-sm flex items-center gap-1.5 transition-all"
-          >
-            <Mail size={13} className="text-rose-500" />
-            <span>skylinkutb@gmail.com</span>
-          </a>
-
-          <button
-            onClick={() => {
-              sound.playClick(750);
-              setCreateModalOpen(true);
-            }}
-            className="px-3.5 py-1.5 rounded-full bg-slate-900 hover:bg-black text-white font-bubbly text-xs font-bold shadow-sm flex items-center gap-1.5 cursor-pointer"
-          >
-            <PlusCircle size={13} className="text-rose-400" />
-            <span>Add Log</span>
-          </button>
-        </div>
+        <button
+          onClick={() => {
+            sound.playClick(750);
+            setCreateModalOpen(true);
+          }}
+          className="px-4 py-2 rounded-full bg-slate-900 hover:bg-black text-white font-bubbly text-xs font-bold shadow-sm flex items-center gap-1.5 cursor-pointer"
+        >
+          <PlusCircle size={14} className="text-rose-400" />
+          <span>Add Mission Log</span>
+        </button>
       </div>
 
       {/* Main Page Hero */}
       <div className="pt-10 pb-8 px-6 sm:px-12 text-center max-w-4xl mx-auto">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-rose-50 border border-rose-200 text-rose-600 text-xs font-bubbly font-semibold shadow-sm mb-4">
           <Rocket size={14} className="text-rose-500 animate-bounce" />
-          <span>CanSat Bahrain Competition 2026 • Official Outreach Log</span>
+          <span>CanSat Bahrain Competition 2026 • Official Mission Log</span>
         </div>
 
         <h1 className="text-3xl sm:text-5xl font-bubbly font-bold text-slate-900 tracking-tight mb-3">
           Team SKYLINK Mission Blog 🛰️
         </h1>
         <p className="text-slate-600 text-xs sm:text-sm max-w-xl mx-auto leading-relaxed">
-          Documenting every workshop session, technical defense, and engineering deliverable completed until the week of PDR at University of Technology Bahrain.
+          Documenting team progress, technical workshops, and our current CAD & 3D printing prototyping session toward the Preliminary Design Review.
         </p>
 
-        {/* Milestone Progress Bar (Slide 8 & 9 accurate) */}
+        {/* Milestone Progress Bar */}
         <div className="mt-8 p-5 bg-white/95 border border-rose-100 rounded-3xl shadow-sm text-left">
           <div className="flex items-center justify-between mb-3 text-xs font-bubbly font-bold text-slate-800">
             <span>Competition Milestones Progress</span>
-            <span className="text-rose-600">Phase 3: Completed Until PDR Week ✅</span>
+            <span className="text-rose-600">Current Phase: CAD & 3D Printing Prototyping 🛠️</span>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center font-sans text-[11px]">
@@ -225,15 +201,15 @@ export const BlogPage: React.FC<BlogPageProps> = ({ onBackToArcade }) => {
               <span className="text-slate-400 text-[10px]">Sun 1 Nov</span>
               <span className="text-emerald-600 font-bold text-[10px] block mt-0.5">COMPLETED ✓</span>
             </div>
-            <div className="bg-emerald-50 border-2 border-emerald-400 rounded-xl p-2.5 shadow-sm">
-              <span className="text-emerald-800 font-bold block">2. PDR Review</span>
-              <span className="text-slate-500 text-[10px]">Sun 15 Nov</span>
-              <span className="text-emerald-600 font-bold text-[10px] block mt-0.5">COMPLETED ✓</span>
+            <div className="bg-rose-50 border-2 border-rose-400 rounded-xl p-2.5 shadow-sm">
+              <span className="text-rose-700 font-bold block">2. PDR Review</span>
+              <span className="text-rose-500 text-[10px]">Sun 15 Nov</span>
+              <span className="text-rose-600 font-bold text-[10px] block mt-0.5 animate-pulse">CAD PRINTING 🛠️</span>
             </div>
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 opacity-80">
               <span className="text-slate-700 font-bold block">3. CDR Review</span>
               <span className="text-slate-400 text-[10px]">Sun 22 Nov</span>
-              <span className="text-amber-600 font-bold text-[10px] block mt-0.5">NEXT UP</span>
+              <span className="text-slate-400 font-bold text-[10px] block mt-0.5">UPCOMING</span>
             </div>
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 opacity-60">
               <span className="text-slate-700 font-bold block">4. SIR / FRR</span>
@@ -349,9 +325,19 @@ export const BlogPage: React.FC<BlogPageProps> = ({ onBackToArcade }) => {
                   </div>
 
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] font-bubbly font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
-                      Completed ✓
-                    </span>
+                    {post.status === 'in_progress' ? (
+                      <span className="text-[10px] font-bubbly font-bold text-rose-600 bg-rose-50 border border-rose-200 px-2.5 py-0.5 rounded-full animate-pulse">
+                        In Progress 🛠️
+                      </span>
+                    ) : post.status === 'upcoming' ? (
+                      <span className="text-[10px] font-bubbly font-bold text-slate-500 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-full">
+                        Upcoming ⏳
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-bubbly font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                        Completed ✓
+                      </span>
+                    )}
                     {post.id.startsWith('custom-') && (
                       <button
                         onClick={(e) => handleDeletePost(post.id, e)}
@@ -435,9 +421,19 @@ export const BlogPage: React.FC<BlogPageProps> = ({ onBackToArcade }) => {
                     {selectedPost.sessionNumber}
                   </span>
                 )}
-                <span className="text-[10px] font-bubbly font-bold px-2.5 py-0.5 rounded-full border bg-emerald-50 text-emerald-700 border-emerald-200 ml-auto">
-                  Completed & Verified ✓
-                </span>
+                {selectedPost.status === 'in_progress' ? (
+                  <span className="text-[10px] font-bubbly font-bold px-2.5 py-0.5 rounded-full border bg-rose-50 text-rose-700 border-rose-200 ml-auto animate-pulse">
+                    Current Active Session 🛠️
+                  </span>
+                ) : selectedPost.status === 'upcoming' ? (
+                  <span className="text-[10px] font-bubbly font-bold px-2.5 py-0.5 rounded-full border bg-slate-100 text-slate-600 border-slate-200 ml-auto">
+                    Scheduled / Upcoming ⏳
+                  </span>
+                ) : (
+                  <span className="text-[10px] font-bubbly font-bold px-2.5 py-0.5 rounded-full border bg-emerald-50 text-emerald-700 border-emerald-200 ml-auto">
+                    Completed & Verified ✓
+                  </span>
+                )}
               </div>
 
               <h2 className="text-2xl sm:text-3xl font-bubbly font-bold text-slate-900 mb-2">
