@@ -22,6 +22,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onPlayClick }) => {
     { href: '#games', label: 'Games' },
     { href: '#leaderboard', label: 'Leaderboard' },
     { href: '#prizes', label: 'Prizes' },
+    { href: '#blog', label: 'Mission Blog' },
     { href: '#cansat', label: 'What is CanSat?' },
     { href: '#team', label: 'Team' },
   ];

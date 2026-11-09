@@ -1,6 +1,8 @@
 import type { CloudDbConfig, PilotAccount } from '../types/auth';
 import type { LeaderboardEntry } from '../types';
 import { getLeaderboard, saveLeaderboardEntry } from './storage';
+import { hashPin, verifyPin } from './crypto';
+import { checkAndNotifyOvertakenPilots } from './notifications';
 
 const CONFIG_KEY = 'skylink_supabase_config_v1';
 const ACCOUNTS_KEY = 'skylink_pilot_accounts_v1';
@@ -180,6 +182,15 @@ export async function fetchGlobalLeaderboard(): Promise<LeaderboardEntry[]> {
 export async function saveGlobalScore(
   entry: Omit<LeaderboardEntry, 'id' | 'timestamp'>
 ): Promise<LeaderboardEntry> {
+  const existingEntries = getLeaderboard();
+
+  // Check if this new score beat any other pilot and trigger email notification
+  try {
+    checkAndNotifyOvertakenPilots(entry, existingEntries);
+  } catch (notifErr) {
+    console.warn('Notification check error:', notifErr);
+  }
+
   // Always save locally first so gameplay is never blocked by network latency
   const localEntry = saveLeaderboardEntry(entry);
 
@@ -286,13 +297,15 @@ export async function registerPilot(data: {
     return { ok: false, message: 'Please enter a PIN or password with at least 3 digits/characters.' };
   }
 
+  const hashedPin = await hashPin(data.pin, cleanCallsign);
+
   const newPilot: PilotAccount = {
     id: 'pilot-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6),
     callsign: cleanCallsign,
     playerName: data.playerName.trim(),
     schoolOrOrg: (data.schoolOrOrg || '').trim(),
     contactInfo: (data.contactInfo || '').trim(),
-    pin: data.pin.trim(),
+    pin: hashedPin,
     createdAt: Date.now(),
   };
 
@@ -316,7 +329,7 @@ export async function registerPilot(data: {
         }
       }
 
-      // 2. Insert into profiles table
+      // 2. Insert into profiles table with cryptographic hash
       const insertRes = await fetch(`${config.supabaseUrl}/rest/v1/profiles`, {
         method: 'POST',
         headers: {
@@ -330,7 +343,7 @@ export async function registerPilot(data: {
           player_name: newPilot.playerName,
           school_or_org: newPilot.schoolOrOrg,
           contact_info: newPilot.contactInfo,
-          pin: newPilot.pin,
+          pin: hashedPin,
         }),
       });
 
@@ -375,7 +388,8 @@ export async function loginPilot(
         const rows = await res.json();
         if (Array.isArray(rows) && rows.length > 0) {
           const profile = rows[0];
-          if (profile.pin === cleanPin) {
+          const isValid = await verifyPin(cleanPin, profile.pin, cleanCallsign);
+          if (isValid) {
             const pilot: PilotAccount = {
               id: profile.id,
               callsign: profile.callsign,
@@ -402,7 +416,8 @@ export async function loginPilot(
   const localAccounts = getLocalAccounts();
   const found = localAccounts.find(a => a.callsign === cleanCallsign);
   if (found) {
-    if (found.pin === cleanPin) {
+    const isValid = await verifyPin(cleanPin, found.pin, cleanCallsign);
+    if (isValid) {
       setActivePilot(found);
       return { ok: true, message: `Welcome back, Pilot ${cleanCallsign}!`, pilot: found };
     } else {

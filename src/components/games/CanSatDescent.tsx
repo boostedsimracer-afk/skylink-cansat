@@ -75,22 +75,38 @@ export const CanSatDescent: React.FC<CanSatDescentProps> = ({ onGameOver, onExit
     state.canX = canvas.width / 2;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (['ArrowLeft', 'KeyA', 'a'].includes(e.code)) state.keys.left = true;
-      if (['ArrowRight', 'KeyD', 'd'].includes(e.code)) state.keys.right = true;
-      if (['Space', 'ArrowDown', 'KeyS', 's'].includes(e.code)) {
+      if (['ArrowLeft', 'KeyA', 'a'].includes(e.code) || ['ArrowLeft', 'a', 'A'].includes(e.key)) {
+        e.preventDefault();
+        state.keys.left = true;
+      }
+      if (['ArrowRight', 'KeyD', 'd'].includes(e.code) || ['ArrowRight', 'd', 'D'].includes(e.key)) {
+        e.preventDefault();
+        state.keys.right = true;
+      }
+      if (['Space', ' ', 'ArrowDown', 'KeyS', 's'].includes(e.code) || [' ', 'ArrowDown', 's', 'S'].includes(e.key)) {
+        e.preventDefault();
         if (!state.keys.space) sound.playParachute();
         state.keys.space = true;
       }
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
-      if (['ArrowLeft', 'KeyA', 'a'].includes(e.code)) state.keys.left = false;
-      if (['ArrowRight', 'KeyD', 'd'].includes(e.code)) state.keys.right = false;
-      if (['Space', 'ArrowDown', 'KeyS', 's'].includes(e.code)) state.keys.space = false;
+      if (['ArrowLeft', 'KeyA', 'a'].includes(e.code) || ['ArrowLeft', 'a', 'A'].includes(e.key)) {
+        e.preventDefault();
+        state.keys.left = false;
+      }
+      if (['ArrowRight', 'KeyD', 'd'].includes(e.code) || ['ArrowRight', 'd', 'D'].includes(e.key)) {
+        e.preventDefault();
+        state.keys.right = false;
+      }
+      if (['Space', ' ', 'ArrowDown', 'KeyS', 's'].includes(e.code) || [' ', 'ArrowDown', 's', 'S'].includes(e.key)) {
+        e.preventDefault();
+        state.keys.space = false;
+      }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('keydown', handleKeyDown, { passive: false });
+    window.addEventListener('keyup', handleKeyUp, { passive: false });
 
     // Initial item spawns
     for (let i = 0; i < 5; i++) {
@@ -527,7 +543,10 @@ export const CanSatDescent: React.FC<CanSatDescentProps> = ({ onGameOver, onExit
       </div>
 
       {/* Main Canvas Container */}
-      <div className="relative w-full aspect-[4/5] max-h-[560px] bg-[#181C24] border-x border-b border-slate-200 rounded-b-2xl overflow-hidden shadow-xl">
+      <div
+        style={{ touchAction: 'none' }}
+        className="relative w-full aspect-[4/5] max-h-[560px] bg-[#181C24] border-x border-b border-slate-200 rounded-b-2xl overflow-hidden shadow-xl"
+      >
         <canvas
           ref={canvasRef}
           width={480}

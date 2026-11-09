@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { GameId } from '../../types';
 import { FlappyCanSat } from './FlappyCanSat';
 import { CanSatDescent } from './CanSatDescent';
@@ -13,9 +13,24 @@ interface GameModalProps {
   onScoreSubmitted: () => void;
 }
 
-export const GameModal: React.FC<GameModalProps> = ({ gameId, onClose, onScoreSubmitted }) => {
+export const GameModal: React.FC<GameModalProps> = React.memo(({ gameId, onClose, onScoreSubmitted }) => {
   const [completedScore, setCompletedScore] = useState<number | null>(null);
   const [submitModalOpen, setSubmitModalOpen] = useState<boolean>(false);
+
+  // Prevent background page from scrolling while game modal is active
+  useEffect(() => {
+    if (gameId) {
+      const prevOverflow = document.body.style.overflow;
+      const prevTouchAction = document.body.style.touchAction;
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+
+      return () => {
+        document.body.style.overflow = prevOverflow;
+        document.body.style.touchAction = prevTouchAction;
+      };
+    }
+  }, [gameId]);
 
   if (!gameId) return null;
 
@@ -42,8 +57,14 @@ export const GameModal: React.FC<GameModalProps> = ({ gameId, onClose, onScoreSu
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto">
-      <div className="relative w-full max-w-xl bg-white border border-rose-200 rounded-3xl shadow-2xl overflow-hidden my-auto">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/85 backdrop-blur-md overflow-hidden select-none"
+      style={{ touchAction: 'none', overscrollBehavior: 'contain' }}
+    >
+      <div
+        className="relative w-full max-w-xl bg-white border border-rose-200 rounded-3xl shadow-2xl overflow-hidden my-auto"
+        style={{ touchAction: 'none' }}
+      >
         {gameId === 'flappy' && (
           <FlappyCanSat onGameOver={handleGameOver} onExit={onClose} />
         )}
@@ -73,4 +94,4 @@ export const GameModal: React.FC<GameModalProps> = ({ gameId, onClose, onScoreSu
       </div>
     </div>
   );
-};
+});

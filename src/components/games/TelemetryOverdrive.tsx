@@ -123,13 +123,16 @@ export const TelemetryOverdrive: React.FC<TelemetryOverdriveProps> = ({ onGameOv
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.repeat) return;
-      if (e.code === 'KeyD' || e.key === '1') triggerHit(0);
-      if (e.code === 'KeyF' || e.key === '2') triggerHit(1);
-      if (e.code === 'KeyJ' || e.key === '3') triggerHit(2);
-      if (e.code === 'KeyK' || e.key === '4') triggerHit(3);
+      if (['KeyD', 'KeyF', 'KeyJ', 'KeyK', 'Digit1', 'Digit2', 'Digit3', 'Digit4', '1', '2', '3', '4'].includes(e.code) || ['d', 'f', 'j', 'k', '1', '2', '3', '4'].includes(e.key.toLowerCase())) {
+        e.preventDefault();
+      }
+      if (e.code === 'KeyD' || e.key === '1' || e.key.toLowerCase() === 'd') triggerHit(0);
+      if (e.code === 'KeyF' || e.key === '2' || e.key.toLowerCase() === 'f') triggerHit(1);
+      if (e.code === 'KeyJ' || e.key === '3' || e.key.toLowerCase() === 'j') triggerHit(2);
+      if (e.code === 'KeyK' || e.key === '4' || e.key.toLowerCase() === 'k') triggerHit(3);
     };
 
-    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown, { passive: false });
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isStarted]);
 
@@ -357,7 +360,10 @@ export const TelemetryOverdrive: React.FC<TelemetryOverdriveProps> = ({ onGameOv
       </div>
 
       {/* Canvas Box */}
-      <div className="relative w-full aspect-[4/5] max-h-[560px] bg-[#181C24] border-x border-b border-slate-200 rounded-b-2xl overflow-hidden shadow-xl">
+      <div
+        style={{ touchAction: 'none' }}
+        className="relative w-full aspect-[4/5] max-h-[560px] bg-[#181C24] border-x border-b border-slate-200 rounded-b-2xl overflow-hidden shadow-xl"
+      >
         <canvas ref={canvasRef} width={480} height={600} className="w-full h-full block" />
 
         {/* Start Overlay */}

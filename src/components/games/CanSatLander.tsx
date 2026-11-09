@@ -129,32 +129,38 @@ export const CanSatLander: React.FC<CanSatLanderProps> = ({ onGameOver, onExit }
 
     const handleKeyDown = (e: KeyboardEvent) => {
       const state = stateRef.current;
-      if (['ArrowUp', 'KeyW', 'w', 'Space'].includes(e.code)) {
+      if (['ArrowUp', 'KeyW', 'w', 'Space', ' '].includes(e.code) || ['ArrowUp', 'w', 'W', ' '].includes(e.key)) {
+        e.preventDefault();
         state.thrusting = true;
       }
-      if (['ArrowLeft', 'KeyA', 'a'].includes(e.code)) {
+      if (['ArrowLeft', 'KeyA', 'a'].includes(e.code) || ['ArrowLeft', 'a', 'A'].includes(e.key)) {
+        e.preventDefault();
         state.rotatingLeft = true;
       }
-      if (['ArrowRight', 'KeyD', 'd'].includes(e.code)) {
+      if (['ArrowRight', 'KeyD', 'd'].includes(e.code) || ['ArrowRight', 'd', 'D'].includes(e.key)) {
+        e.preventDefault();
         state.rotatingRight = true;
       }
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
       const state = stateRef.current;
-      if (['ArrowUp', 'KeyW', 'w', 'Space'].includes(e.code)) {
+      if (['ArrowUp', 'KeyW', 'w', 'Space', ' '].includes(e.code) || ['ArrowUp', 'w', 'W', ' '].includes(e.key)) {
+        e.preventDefault();
         state.thrusting = false;
       }
-      if (['ArrowLeft', 'KeyA', 'a'].includes(e.code)) {
+      if (['ArrowLeft', 'KeyA', 'a'].includes(e.code) || ['ArrowLeft', 'a', 'A'].includes(e.key)) {
+        e.preventDefault();
         state.rotatingLeft = false;
       }
-      if (['ArrowRight', 'KeyD', 'd'].includes(e.code)) {
+      if (['ArrowRight', 'KeyD', 'd'].includes(e.code) || ['ArrowRight', 'd', 'D'].includes(e.key)) {
+        e.preventDefault();
         state.rotatingRight = false;
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('keydown', handleKeyDown, { passive: false });
+    window.addEventListener('keyup', handleKeyUp, { passive: false });
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
@@ -519,7 +525,10 @@ export const CanSatLander: React.FC<CanSatLanderProps> = ({ onGameOver, onExit }
       </div>
 
       {/* Main Canvas Box */}
-      <div className="relative w-full aspect-[4/5] max-h-[560px] bg-[#181C24] border-x border-b border-slate-200 rounded-b-2xl overflow-hidden shadow-xl">
+      <div
+        style={{ touchAction: 'none' }}
+        className="relative w-full aspect-[4/5] max-h-[560px] bg-[#181C24] border-x border-b border-slate-200 rounded-b-2xl overflow-hidden shadow-xl"
+      >
         <canvas ref={canvasRef} width={480} height={550} className="w-full h-full block" />
 
         {/* Start Screen */}

@@ -83,13 +83,13 @@ export const FlappyCanSat: React.FC<FlappyCanSatProps> = ({ onGameOver, onExit }
     state.started = false;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (['Space', 'ArrowUp', 'KeyW'].includes(e.code)) {
+      if (['Space', ' ', 'ArrowUp', 'KeyW', 'w'].includes(e.code) || [' ', 'ArrowUp', 'w', 'W'].includes(e.key)) {
         e.preventDefault();
         jump();
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown, { passive: false });
 
     const loop = (now: number) => {
       const dt = Math.min((now - lastTime) / 1000, 0.1);
@@ -354,6 +354,7 @@ export const FlappyCanSat: React.FC<FlappyCanSatProps> = ({ onGameOver, onExit }
           e.preventDefault();
           jump();
         }}
+        style={{ touchAction: 'none' }}
         className="relative w-full aspect-[4/5] max-h-[560px] bg-[#fdf2f4] border-x border-b border-rose-100 rounded-b-2xl overflow-hidden shadow-xl cursor-pointer"
       >
         <canvas ref={canvasRef} width={420} height={560} className="w-full h-full block" />

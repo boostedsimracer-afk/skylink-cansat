@@ -55,16 +55,28 @@ export const DataCatcher: React.FC<DataCatcherProps> = ({ onGameOver, onExit }) 
     state.dishX = canvas.width / 2;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (['ArrowLeft', 'KeyA'].includes(e.code)) state.keys.left = true;
-      if (['ArrowRight', 'KeyD'].includes(e.code)) state.keys.right = true;
+      if (['ArrowLeft', 'KeyA', 'a'].includes(e.code) || ['ArrowLeft', 'a', 'A'].includes(e.key)) {
+        e.preventDefault();
+        state.keys.left = true;
+      }
+      if (['ArrowRight', 'KeyD', 'd'].includes(e.code) || ['ArrowRight', 'd', 'D'].includes(e.key)) {
+        e.preventDefault();
+        state.keys.right = true;
+      }
     };
     const handleKeyUp = (e: KeyboardEvent) => {
-      if (['ArrowLeft', 'KeyA'].includes(e.code)) state.keys.left = false;
-      if (['ArrowRight', 'KeyD'].includes(e.code)) state.keys.right = false;
+      if (['ArrowLeft', 'KeyA', 'a'].includes(e.code) || ['ArrowLeft', 'a', 'A'].includes(e.key)) {
+        e.preventDefault();
+        state.keys.left = false;
+      }
+      if (['ArrowRight', 'KeyD', 'd'].includes(e.code) || ['ArrowRight', 'd', 'D'].includes(e.key)) {
+        e.preventDefault();
+        state.keys.right = false;
+      }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('keydown', handleKeyDown, { passive: false });
+    window.addEventListener('keyup', handleKeyUp, { passive: false });
 
     const loop = (now: number) => {
       const dt = Math.min((now - lastTime) / 1000, 0.1);
@@ -291,6 +303,7 @@ export const DataCatcher: React.FC<DataCatcherProps> = ({ onGameOver, onExit }) 
       {/* Main Canvas Box */}
       <div
         onTouchMove={handleTouchMove}
+        style={{ touchAction: 'none' }}
         className="relative w-full aspect-[4/5] max-h-[560px] bg-[#fdf2f4] border-x border-b border-rose-100 rounded-b-2xl overflow-hidden shadow-xl cursor-ew-resize"
       >
         <canvas ref={canvasRef} width={420} height={560} className="w-full h-full block" />

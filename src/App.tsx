@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { GameId, LeaderboardEntry } from './types';
 import { fetchGlobalLeaderboard } from './utils/cloudDb';
 import { AuthProvider } from './context/AuthContext';
@@ -8,6 +8,7 @@ import { Hero } from './components/Hero';
 import { ArcadeSection } from './components/ArcadeSection';
 import { LeaderboardSection } from './components/LeaderboardSection';
 import { PrizeSection } from './components/PrizeSection';
+import { BlogSection } from './components/BlogSection';
 import { CanSatViewer } from './components/CanSatViewer';
 import { AboutCanSat } from './components/AboutCanSat';
 import { TeamSection } from './components/TeamSection';
@@ -20,6 +21,8 @@ export function AppContent() {
   const [activeGame, setActiveGame] = useState<GameId | null>(null);
   const [adminModalOpen, setAdminModalOpen] = useState<boolean>(false);
   const [leaderboardEntries, setLeaderboardEntries] = useState<LeaderboardEntry[]>([]);
+  const activeGameRef = useRef<GameId | null>(null);
+  activeGameRef.current = activeGame;
 
   const refreshLeaderboard = async () => {
     try {
@@ -31,11 +34,14 @@ export function AppContent() {
   useEffect(() => {
     refreshLeaderboard();
 
-    // Auto-poll every 5 seconds so when anyone completes a game on their phone,
+    // Auto-poll every 6 seconds so when anyone completes a game on their phone,
     // the leaderboard live updates on all attendees' screens & projectors!
+    // Pauses while a player is inside a game to prevent any screen flashing/interruptions.
     const interval = setInterval(() => {
-      refreshLeaderboard();
-    }, 5000);
+      if (!activeGameRef.current && document.visibilityState === 'visible') {
+        refreshLeaderboard();
+      }
+    }, 6000);
 
     return () => clearInterval(interval);
   }, []);
@@ -87,7 +93,10 @@ export function AppContent() {
           {/* 4. Prizes Pool */}
           <PrizeSection />
 
-          {/* 5. What's Inside CanSat */}
+          {/* 5. Mission Log & Outreach Blog */}
+          <BlogSection />
+
+          {/* 6. What's Inside CanSat */}
           <CanSatViewer />
 
           {/* 6. How it Works (5 Steps) */}
