@@ -1,252 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Calendar,
   CheckCircle2,
   Compass,
+  ExternalLink,
   Layers,
+  Mail,
   Rocket,
   X,
 } from 'lucide-react';
+import { getStoredBlogPosts } from '../utils/blogStorage';
+import type { BlogPost } from '../utils/blogStorage';
 import { sound } from '../utils/audio';
 
-export interface BlogPost {
-  id: string;
-  title: string;
-  category: 'workshop' | 'presentation' | 'engineering';
-  date: string;
-  status: 'completed' | 'in_progress' | 'upcoming';
-  summary: string;
-  readTime: string;
-  author: string;
-  authorRole: string;
-  tags: string[];
-  fullReport: {
-    objectives: string[];
-    completedMilestones: string[];
-    technicalDetails: { label: string; value: string }[];
-    quote?: string;
-    nextSteps: string;
-  };
+interface BlogSectionProps {
+  onOpenFullBlog?: () => void;
 }
 
-export const INITIAL_POSTS: BlogPost[] = [
-  {
-    id: 'induction-session',
-    title: 'Induction Session & Team SKYLINK Formation',
-    category: 'workshop',
-    date: 'October 26, 2026',
-    status: 'completed',
-    readTime: '3 min read',
-    author: 'Zaid Ahmad Khan',
-    authorRole: 'Science & Outreach Lead',
-    tags: ['Kickoff', 'Team Formation', 'Induction'],
-    summary:
-      'Attended the official CanSat Bahrain 2026 Induction Workshop organized by the space authorities. Team SKYLINK established at University of Technology Bahrain.',
-    fullReport: {
-      objectives: [
-        'Understand the official CanSat Bahrain 2026 competition regulations and flight envelope.',
-        'Define primary mission requirements: barometric altitude, air temperature, and 1Hz radio downlink.',
-        'Assemble the core multidisciplinary engineering team across Mechanical, Electrical, and Software disciplines.',
-      ],
-      completedMilestones: [
-        'Team SKYLINK registered under University of Technology Bahrain (UTB).',
-        'Appointed Dr. Sateesh Kumar Nataraj as Academic Project Supervisor.',
-        'Selected secondary payload mission: real-time atmospheric air quality index (AQI) and descent dynamics modeling.',
-      ],
-      technicalDetails: [
-        { label: 'Envelope Form Factor', value: 'Standard 330ml Aluminum Can' },
-        { label: 'Max Mass Allowed', value: '350 grams (±10g tolerance)' },
-        { label: 'Rocket Apogee', value: '1,000 meters AGL' },
-        { label: 'Downlink Frequency', value: '433 MHz LoRa' },
-      ],
-      quote:
-        '"Our goal is not just to build a CanSat, but to engineer a robust miniature spacecraft that demonstrates precise telemetry and inspires the next generation of Bahraini aerospace engineers."',
-      nextSteps:
-        'Prepare the formal Mission Concept Review (MCR) presentation and draft initial electrical schematics.',
-    },
-  },
-  {
-    id: 'mcr-presentation',
-    title: 'Workshop 1: Mission Concept Review (MCR) Defense',
-    category: 'presentation',
-    date: 'November 6, 2026',
-    status: 'completed',
-    readTime: '4 min read',
-    author: 'Osama Zahid',
-    authorRole: 'Project Manager',
-    tags: ['MCR', 'Architecture', 'Milestone'],
-    summary:
-      'Presented Team SKYLINK’s Mission Concept Review to the academic review board, outlining flight computer selection, power budget, and sensor architecture.',
-    fullReport: {
-      objectives: [
-        'Present the conceptual architecture and feasibility study for the 1,000m flight profile.',
-        'Validate sensor selection: BMP280/BME280 barometric pressure, MPU6050 6-DOF IMU, and LoRa transceiver.',
-        'Establish the Gantt chart, risk mitigation matrix, and component procurement timeline.',
-      ],
-      completedMilestones: [
-        'MCR defense approved with high commendation on power redundancy.',
-        'Selected ESP32 dual-core 240MHz microcontroller as primary onboard flight computer.',
-        'Established structural modularity using 3D printed PETG interior chassis disks.',
-      ],
-      technicalDetails: [
-        { label: 'Flight Computer', value: 'ESP32 Dual-Core (240MHz)' },
-        { label: 'Telemetry Module', value: 'SX1278 LoRa 433MHz' },
-        { label: 'Inertial Sensor', value: 'MPU6050 3-Axis Gyro + Accel' },
-        { label: 'Environmental Sensor', value: 'BMP280 Barometer + Temp' },
-      ],
-      quote:
-        '"The review panel appreciated our modular stack architecture which allows rapid swap-out of avionics during field trials."',
-      nextSteps:
-        'Collaborate with the mechanical division on parachute drag calculations and descent rate constraints.',
-    },
-  },
-  {
-    id: 'parachute-aerodynamics',
-    title: 'Workshop 2: Aerodynamics & Parachute Design Brief',
-    category: 'engineering',
-    date: 'November 18, 2026',
-    status: 'completed',
-    readTime: '4 min read',
-    author: 'Mohsin Akil',
-    authorRole: 'Mechanical Lead',
-    tags: ['Aerodynamics', 'Parachute', 'Recovery'],
-    summary:
-      'Engineered and simulated the cross/hexstar recovery parachute to ensure stable descent below the mandatory 8 m/s impact threshold.',
-    fullReport: {
-      objectives: [
-        'Calculate required canopy surface area based on local air density at sea level (Bahrain ambient temp 28°C).',
-        'Limit terminal descent velocity between 6 m/s and 8 m/s for safe recovery and sensor stability.',
-        'Design a high-visibility ripstop nylon parachute with aerodynamic spill hole to prevent oscillatory swinging.',
-      ],
-      completedMilestones: [
-        'Selected Hexstar cross-canopy geometry for superior anti-oscillation dampening.',
-        'Calculated canopy diameter: 48cm with central spill hole of 6cm diameter.',
-        'Completed pull-testing on braided Kevlar suspension lines up to 25 kgf tension load.',
-      ],
-      technicalDetails: [
-        { label: 'Canopy Geometry', value: 'Hexstar Cross Parachute' },
-        { label: 'Calculated Descent Rate', value: '6.8 m/s (< 8.0 m/s threshold)' },
-        { label: 'Suspension Lines', value: '8x Braided Kevlar Cords' },
-        { label: 'Fabric Material', value: 'Ripstop Nylon (40 g/m²)' },
-      ],
-      quote:
-        '"A stable parachute is critical. If the CanSat swings wildly in descent, our antenna radiation pattern drops out. The Hexstar design eliminates pendular oscillations."',
-      nextSteps:
-        'Fabricate the flight prototype and perform wind-tunnel and vertical drop test measurements.',
-    },
-  },
-  {
-    id: 'pdr-presentation',
-    title: 'Workshop 3: Preliminary Design Review (PDR) Presentation',
-    category: 'presentation',
-    date: 'December 14, 2026',
-    status: 'completed',
-    readTime: '5 min read',
-    author: 'Mohammad Shoaib',
-    authorRole: 'Electrical Lead',
-    tags: ['PDR', 'Electronics', 'Telemetry'],
-    summary:
-      'Completed and passed the Preliminary Design Review (PDR). Validated link budget for 433MHz LoRa downlink and secondary payload telemetry parser.',
-    fullReport: {
-      objectives: [
-        'Deliver complete electrical schematic and power distribution network.',
-        'Demonstrate link budget calculations ensuring ground station reception beyond 1.5 km line-of-sight.',
-        'Present the primary and secondary battery safety isolation circuitry.',
-      ],
-      completedMilestones: [
-        'Passed PDR evaluation milestone with 94% technical score.',
-        'RF link margin calculated at +18 dB at 1.5 km altitude with 100mW transmission power.',
-        'Integrated low-dropout 3.3V step-down regulator with reverse-polarity protection diode.',
-      ],
-      technicalDetails: [
-        { label: 'Battery Chemistry', value: '2S 7.4V 500mAh LiPo' },
-        { label: 'Operating Voltage', value: '3.3V Logic / 5V Sensor Rail' },
-        { label: 'RF Output Power', value: '+20 dBm (100 mW)' },
-        { label: 'Total Current Draw', value: '185 mA (Active Downlink)' },
-      ],
-      quote:
-        '"Our telemetry link budget incorporates conservative atmospheric loss estimates to guarantee continuous ground station lock throughout descent."',
-      nextSteps:
-        'Begin prototype PCB etching, component surface mounting, and firmware interrupt optimization.',
-    },
-  },
-  {
-    id: 'avionics-groundstation',
-    title: 'Workshop 4: Sensor Integration & Ground Station Calibration',
-    category: 'engineering',
-    date: 'January 15, 2026',
-    status: 'completed',
-    readTime: '4 min read',
-    author: 'Mohammad Ali',
-    authorRole: 'Software & Data Lead',
-    tags: ['Ground Station', 'Firmware', 'Telemetry'],
-    summary:
-      'Built and calibrated the Ground Station receiver Yagi antenna. Achieved 100% telemetry decoding with live altitude, temperature, and GPS plotting.',
-    fullReport: {
-      objectives: [
-        'Develop real-time packet parsing protocol with checksum validation (CRC-16).',
-        'Interface directional handheld Yagi antenna to RTL-SDR / LoRa ground receiver.',
-        'Test automated CSV data logging and live telemetry visualization dashboard.',
-      ],
-      completedMilestones: [
-        'Zero packet loss recorded across 20-minute continuous transmitter stress test.',
-        'Telemetry rate configured at 1 Hz compliant with official competition mandate.',
-        'Integrated audio acoustic buzzer beacon for post-landing recovery locating.',
-      ],
-      technicalDetails: [
-        { label: 'Baud Rate', value: '9600 bps over FSK/LoRa' },
-        { label: 'Ground Station Antenna', value: '3-Element Yagi (7 dBi Gain)' },
-        { label: 'Packet Checksum', value: 'CRC-16 Hardware Check' },
-        { label: 'Recovery Beacon', value: '95 dB Piezo Buzzer' },
-      ],
-      quote:
-        '"Receiving that first live packet from our CanSat avionics across campus with zero dropouts was a huge milestone for the software team!"',
-      nextSteps:
-        'Conduct outdoor range testing up to 1 km and assemble the flight enclosure for CDR.',
-    },
-  },
-  {
-    id: 'cdr-drop-testing',
-    title: 'Critical Design Review (CDR) & Drone Drop Testing',
-    category: 'engineering',
-    date: 'February 2026',
-    status: 'in_progress',
-    readTime: '3 min read',
-    author: 'Dr. Sateesh Kumar Nataraj',
-    authorRole: 'Supervisor',
-    tags: ['CDR', 'Flight Test', 'Drop Test'],
-    summary:
-      'Currently preparing the final flight unit for high-altitude tethered drone drop tests and the Critical Design Review (CDR) inspection.',
-    fullReport: {
-      objectives: [
-        'Execute vertical drop tests from 150m and 300m via drone deployment.',
-        'Verify instant parachute inflation within 0.8 seconds of ejection.',
-        'Inspect structural integrity of 3D chassis upon impact and verify post-landing recovery beacon.',
-      ],
-      completedMilestones: [
-        'Flight chassis printed with carbon-fiber reinforced PETG filament.',
-        'Ejection switch mechanism verified with zero false triggers.',
-        'Final CDR technical documentation submitted to the competition jury.',
-      ],
-      technicalDetails: [
-        { label: 'Drop Test Platform', value: 'Heavy-Lift Quadcopter' },
-        { label: 'Test Drop Altitudes', value: '150m & 300m AGL' },
-        { label: 'Chassis Material', value: 'Carbon-PETG (30% infill)' },
-        { label: 'Target Touchdown Speed', value: '6.5 m/s' },
-      ],
-      quote:
-        '"The dedication shown by the students across engineering departments exemplifies the aerospace spirit. Team SKYLINK is on track for a spectacular launch!"',
-      nextSteps:
-        'Complete the final launch readiness review (LRR) and pack flight units for official launch day.',
-    },
-  },
-];
-
-export const BlogSection: React.FC = () => {
-  const [selectedCategory, setSelectedCategory] = useState<'all' | 'workshop' | 'presentation' | 'engineering'>('all');
+export const BlogSection: React.FC<BlogSectionProps> = ({ onOpenFullBlog }) => {
+  const [posts, setPosts] = useState<BlogPost[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<
+    'all' | 'workshop' | 'presentation' | 'engineering'
+  >('all');
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
 
-  const filteredPosts = INITIAL_POSTS.filter(post => {
+  useEffect(() => {
+    setPosts(getStoredBlogPosts());
+  }, []);
+
+  const filteredPosts = posts.filter(post => {
     if (selectedCategory === 'all') return true;
     return post.category === selectedCategory;
   });
@@ -254,22 +36,13 @@ export const BlogSection: React.FC = () => {
   const getCategoryBadge = (cat: BlogPost['category']) => {
     switch (cat) {
       case 'workshop':
-        return { label: 'Workshop', bg: 'bg-rose-50 text-rose-700 border-rose-200' };
+        return { label: '🛠️ Workshop', bg: 'bg-rose-50 text-rose-700 border-rose-200' };
       case 'presentation':
-        return { label: 'Defense & PDR', bg: 'bg-amber-50 text-amber-700 border-amber-200' };
+        return { label: '📊 Milestone Review', bg: 'bg-amber-50 text-amber-700 border-amber-200' };
       case 'engineering':
-        return { label: 'Engineering Log', bg: 'bg-slate-100 text-slate-800 border-slate-200' };
-    }
-  };
-
-  const getStatusBadge = (status: BlogPost['status']) => {
-    switch (status) {
-      case 'completed':
-        return { label: 'Completed ✅', color: 'text-emerald-600 bg-emerald-50 border-emerald-200' };
-      case 'in_progress':
-        return { label: 'In Progress 🚀', color: 'text-rose-600 bg-rose-50 border-rose-200 animate-pulse' };
-      case 'upcoming':
-        return { label: 'Upcoming ⏳', color: 'text-slate-500 bg-slate-100 border-slate-200' };
+        return { label: '⚡ Engineering & CAD', bg: 'bg-slate-100 text-slate-800 border-slate-200' };
+      default:
+        return { label: 'Outreach', bg: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
     }
   };
 
@@ -279,14 +52,48 @@ export const BlogSection: React.FC = () => {
       <div className="text-center mb-10">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-rose-50 border border-rose-200 text-rose-600 text-xs font-bubbly font-semibold shadow-sm mb-3">
           <Rocket size={14} className="text-rose-500" />
-          <span>OFFICIAL MISSION LOG & TIMELINE</span>
+          <span>CAN-SAT BAHRAIN 2026 • OFFICIAL OUTREACH LOG</span>
         </div>
         <h2 className="text-3xl sm:text-5xl font-bubbly font-bold text-slate-900 tracking-tight mb-3">
-          The Road to 1,000 Meters 🛰️
+          Mission Blog & Engineering Logs 🛰️
         </h2>
         <p className="text-slate-500 text-xs sm:text-sm max-w-xl mx-auto font-medium">
-          Follow our journey through every workshop, technical defense, parachute drop test, and engineering breakthrough for CanSat Bahrain 2026.
+          Follow Team SKYLINK’s journey through every workshop, technical defense, and prototype milestone completed until the week of PDR.
         </p>
+
+        {/* Outreach Evidence Links (Linktree & Official Email) */}
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-xs">
+          <a
+            href="https://linktr.ee/qr/2a450f9d-f8f9-4041-bca6-d3176b9d65b6"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-3.5 py-1.5 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-bubbly font-bold shadow-sm flex items-center gap-1.5 transition-all"
+          >
+            <span>🌲</span>
+            <span>Linktree Link-in-Bio</span>
+            <ExternalLink size={12} className="opacity-70" />
+          </a>
+
+          <a
+            href="mailto:skylinkutb@gmail.com"
+            className="px-3.5 py-1.5 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bubbly font-bold shadow-sm flex items-center gap-1.5 transition-all"
+          >
+            <Mail size={13} className="text-rose-500" />
+            <span>skylinkutb@gmail.com</span>
+          </a>
+
+          {onOpenFullBlog && (
+            <button
+              onClick={() => {
+                sound.playClick(800);
+                onOpenFullBlog();
+              }}
+              className="px-3.5 py-1.5 rounded-full bg-slate-900 hover:bg-black text-white font-bubbly font-bold shadow-sm flex items-center gap-1.5 transition-all cursor-pointer"
+            >
+              <span>Dedicated Blog Page →</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Category Pills */}
@@ -302,7 +109,7 @@ export const BlogSection: React.FC = () => {
               : 'bg-white text-slate-600 hover:bg-slate-50 border border-rose-100'
           }`}
         >
-          All Milestones ({INITIAL_POSTS.length})
+          All Completed Milestones ({posts.length})
         </button>
         <button
           onClick={() => {
@@ -341,15 +148,14 @@ export const BlogSection: React.FC = () => {
               : 'bg-white text-slate-600 hover:bg-slate-50 border border-rose-100'
           }`}
         >
-          ⚡ Engineering Logs
+          ⚡ Engineering & CAD
         </button>
       </div>
 
       {/* Blog Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
-        {filteredPosts.map(post => {
+        {filteredPosts.slice(0, 6).map(post => {
           const cat = getCategoryBadge(post.category);
-          const stat = getStatusBadge(post.status);
 
           return (
             <div
@@ -363,11 +169,19 @@ export const BlogSection: React.FC = () => {
               <div>
                 {/* Meta Bar */}
                 <div className="flex items-center justify-between gap-2 mb-3">
-                  <span className={`text-[11px] font-bubbly font-semibold px-2.5 py-0.5 rounded-full border ${cat.bg}`}>
-                    {cat.label}
-                  </span>
-                  <span className={`text-[10px] font-bubbly font-bold px-2.5 py-0.5 rounded-full border ${stat.color}`}>
-                    {stat.label}
+                  <div className="flex items-center gap-1.5">
+                    <span className={`text-[11px] font-bubbly font-semibold px-2.5 py-0.5 rounded-full border ${cat.bg}`}>
+                      {cat.label}
+                    </span>
+                    {post.sessionNumber && (
+                      <span className="text-[10px] font-mono px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md">
+                        {post.sessionNumber}
+                      </span>
+                    )}
+                  </div>
+
+                  <span className="text-[10px] font-bubbly font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                    Completed ✓
                   </span>
                 </div>
 
@@ -375,6 +189,13 @@ export const BlogSection: React.FC = () => {
                 <h3 className="font-bubbly font-bold text-slate-900 text-lg group-hover:text-rose-600 transition-colors mb-2 leading-snug">
                   {post.title}
                 </h3>
+
+                {/* Trainer / Location info */}
+                {post.trainerOrLocation && (
+                  <p className="text-[11px] text-slate-400 mb-2 font-medium">
+                    📍 {post.trainerOrLocation}
+                  </p>
+                )}
 
                 {/* Summary */}
                 <p className="text-slate-500 text-xs leading-relaxed mb-4 line-clamp-3">
@@ -410,6 +231,21 @@ export const BlogSection: React.FC = () => {
         })}
       </div>
 
+      {/* Button to view all posts on dedicated page */}
+      {onOpenFullBlog && posts.length > 6 && (
+        <div className="text-center pt-2">
+          <button
+            onClick={() => {
+              sound.playClick(800);
+              onOpenFullBlog();
+            }}
+            className="px-8 py-3.5 bg-white hover:bg-slate-50 text-slate-800 font-bubbly font-bold rounded-full border border-rose-200 shadow-sm transition-all bubble-btn cursor-pointer text-xs sm:text-sm"
+          >
+            View All {posts.length} Milestone Reports on Dedicated Blog Page →
+          </button>
+        </div>
+      )}
+
       {/* FULL MISSION REPORT MODAL */}
       {selectedPost && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
@@ -430,17 +266,25 @@ export const BlogSection: React.FC = () => {
                 <span className={`text-[11px] font-bubbly font-semibold px-2.5 py-0.5 rounded-full border ${getCategoryBadge(selectedPost.category).bg}`}>
                   {getCategoryBadge(selectedPost.category).label}
                 </span>
-                <span className={`text-[10px] font-bubbly font-bold px-2.5 py-0.5 rounded-full border ${getStatusBadge(selectedPost.status).color}`}>
-                  {getStatusBadge(selectedPost.status).label}
-                </span>
-                <span className="text-[11px] text-slate-400 font-mono ml-auto">
-                  {selectedPost.readTime}
+                {selectedPost.sessionNumber && (
+                  <span className="text-[10px] font-mono px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md">
+                    {selectedPost.sessionNumber}
+                  </span>
+                )}
+                <span className="text-[10px] font-bubbly font-bold px-2.5 py-0.5 rounded-full border bg-emerald-50 text-emerald-700 border-emerald-200 ml-auto">
+                  Completed & Verified ✓
                 </span>
               </div>
 
               <h2 className="text-2xl sm:text-3xl font-bubbly font-bold text-slate-900 mb-2">
                 {selectedPost.title}
               </h2>
+
+              {selectedPost.trainerOrLocation && (
+                <p className="text-xs text-rose-600 font-medium mb-3">
+                  📍 {selectedPost.trainerOrLocation}
+                </p>
+              )}
 
               <div className="flex items-center gap-3 text-xs text-slate-500 pb-4 mb-5 border-b border-rose-100">
                 <span>By <strong className="text-slate-800">{selectedPost.author}</strong> ({selectedPost.authorRole})</span>
@@ -459,7 +303,7 @@ export const BlogSection: React.FC = () => {
               <div className="mb-6">
                 <h4 className="font-bubbly font-bold text-sm text-slate-900 mb-2 flex items-center gap-2">
                   <Compass size={16} className="text-rose-500" />
-                  <span>Workshop Objectives</span>
+                  <span>Session Objectives</span>
                 </h4>
                 <ul className="space-y-1.5 text-xs text-slate-600">
                   {selectedPost.fullReport.objectives.map((obj, i) => (
@@ -491,7 +335,7 @@ export const BlogSection: React.FC = () => {
               <div className="mb-6">
                 <h4 className="font-bubbly font-bold text-sm text-slate-900 mb-2 flex items-center gap-2">
                   <Layers size={16} className="text-rose-500" />
-                  <span>Technical Baseline</span>
+                  <span>Technical Data & Budgets</span>
                 </h4>
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   {selectedPost.fullReport.technicalDetails.map((item, i) => (

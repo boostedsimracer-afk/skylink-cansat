@@ -1,14 +1,20 @@
 import React, { useState } from 'react';
-import { Gamepad2, LogOut, Menu, Rocket, Volume2, VolumeX, X } from 'lucide-react';
+import { ExternalLink, Gamepad2, LogOut, Mail, Menu, Rocket, Volume2, VolumeX, X } from 'lucide-react';
 import { sound } from '../utils/audio';
 import logoUrl from '../assets/logo.png';
 import { useAuth } from '../context/AuthContext';
 
 interface NavbarProps {
   onPlayClick: () => void;
+  currentView?: 'home' | 'blog';
+  onSelectView?: (view: 'home' | 'blog') => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onPlayClick }) => {
+export const Navbar: React.FC<NavbarProps> = ({
+  onPlayClick,
+  currentView = 'home',
+  onSelectView,
+}) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [soundOn, setSoundOn] = useState(sound.enabled);
   const { currentPilot, isLoggedIn, openAuthModal, logout } = useAuth();
@@ -18,19 +24,38 @@ export const Navbar: React.FC<NavbarProps> = ({ onPlayClick }) => {
     setSoundOn(next);
   };
 
-  const navLinks = [
-    { href: '#games', label: 'Games' },
-    { href: '#leaderboard', label: 'Leaderboard' },
-    { href: '#prizes', label: 'Prizes' },
-    { href: '#blog', label: 'Mission Blog' },
-    { href: '#cansat', label: 'What is CanSat?' },
-    { href: '#team', label: 'Team' },
-  ];
+  const handleNavClick = (href: string, isBlogLink?: boolean) => {
+    sound.playClick(650);
+    setMobileMenuOpen(false);
+
+    if (isBlogLink) {
+      if (onSelectView) onSelectView('blog');
+      return;
+    }
+
+    if (currentView === 'blog' && onSelectView) {
+      onSelectView('home');
+      setTimeout(() => {
+        const el = document.querySelector(href);
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+      return;
+    }
+
+    const el = document.querySelector(href);
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
+  };
 
   return (
     <nav className="w-full pt-6 pb-4 px-6 sm:px-12 flex items-center justify-between">
       {/* Brand */}
-      <a href="#" className="flex items-center gap-3 group" onClick={() => sound.playClick(800)}>
+      <button
+        onClick={() => {
+          sound.playClick(800);
+          if (onSelectView) onSelectView('home');
+        }}
+        className="flex items-center gap-3 group text-left cursor-pointer"
+      >
         <img
           src={logoUrl}
           alt="SKYLINK Logo"
@@ -44,24 +69,72 @@ export const Navbar: React.FC<NavbarProps> = ({ onPlayClick }) => {
             UTB BAHRAIN
           </span>
         </div>
-      </a>
+      </button>
 
-      {/* Minimal clean links */}
-      <div className="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-600 font-sans">
-        {navLinks.map(link => (
-          <a
-            key={link.href}
-            href={link.href}
-            onClick={() => sound.playClick(650)}
-            className="hover:text-rose-500 transition-colors"
-          >
-            {link.label}
-          </a>
-        ))}
+      {/* Main Navigation Links */}
+      <div className="hidden md:flex items-center gap-6 text-sm font-semibold text-slate-600 font-sans">
+        <button
+          onClick={() => handleNavClick('#games')}
+          className={`hover:text-rose-500 transition-colors cursor-pointer ${
+            currentView === 'home' ? 'text-slate-900 font-bold' : ''
+          }`}
+        >
+          Games
+        </button>
+        <button
+          onClick={() => handleNavClick('#leaderboard')}
+          className="hover:text-rose-500 transition-colors cursor-pointer"
+        >
+          Leaderboard
+        </button>
+        <button
+          onClick={() => handleNavClick('#prizes')}
+          className="hover:text-rose-500 transition-colors cursor-pointer"
+        >
+          Prizes
+        </button>
+
+        {/* Dedicated Mission Blog Tab Button */}
+        <button
+          onClick={() => handleNavClick('#blog', true)}
+          className={`px-3 py-1 rounded-full font-bubbly text-xs font-bold transition-all cursor-pointer ${
+            currentView === 'blog'
+              ? 'bg-rose-500 text-white shadow-sm'
+              : 'text-rose-600 hover:bg-rose-50 border border-rose-200'
+          }`}
+        >
+          📰 Mission Blog
+        </button>
+
+        <button
+          onClick={() => handleNavClick('#cansat')}
+          className="hover:text-rose-500 transition-colors cursor-pointer"
+        >
+          What is CanSat?
+        </button>
+        <button
+          onClick={() => handleNavClick('#team')}
+          className="hover:text-rose-500 transition-colors cursor-pointer"
+        >
+          Team
+        </button>
       </div>
 
       {/* Right Actions */}
       <div className="flex items-center gap-2.5">
+        {/* Linktree Button */}
+        <a
+          href="https://linktr.ee/qr/2a450f9d-f8f9-4041-bca6-d3176b9d65b6"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="SKYLINK Linktree Link-in-Bio"
+          className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bubbly font-bold transition-all shadow-sm"
+        >
+          <span>🌲</span>
+          <span>Linktree</span>
+          <ExternalLink size={11} className="opacity-70" />
+        </a>
+
         {/* Sound FX Toggle */}
         <button
           onClick={toggleSound}
@@ -89,7 +162,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onPlayClick }) => {
         ) : (
           <button
             onClick={openAuthModal}
-            className="px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 font-bubbly font-bold rounded-full shadow-sm border border-rose-100 bubble-btn flex items-center gap-1.5 cursor-pointer text-xs"
+            className="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 font-bubbly font-bold rounded-full shadow-sm border border-rose-100 bubble-btn flex items-center gap-1.5 cursor-pointer text-xs"
           >
             <Rocket size={14} className="text-rose-500" />
             <span className="hidden sm:inline">Pilot Login</span>
@@ -100,12 +173,17 @@ export const Navbar: React.FC<NavbarProps> = ({ onPlayClick }) => {
         <button
           onClick={() => {
             sound.playClick(900);
-            onPlayClick();
+            if (currentView === 'blog' && onSelectView) {
+              onSelectView('home');
+              setTimeout(() => onPlayClick(), 150);
+            } else {
+              onPlayClick();
+            }
           }}
-          className="px-5 py-2.5 bg-rose-500 hover:bg-rose-600 text-white font-bubbly font-semibold rounded-full shadow-md shadow-rose-500/20 bubble-btn flex items-center gap-2 cursor-pointer text-xs sm:text-sm"
+          className="px-4 sm:px-5 py-2.5 bg-rose-500 hover:bg-rose-600 text-white font-bubbly font-semibold rounded-full shadow-md shadow-rose-500/20 bubble-btn flex items-center gap-1.5 cursor-pointer text-xs sm:text-sm"
         >
           <Gamepad2 size={16} />
-          <span>Play Now</span>
+          <span>Play Games</span>
         </button>
 
         {/* Mobile Hamburger */}
@@ -119,7 +197,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onPlayClick }) => {
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="absolute top-24 left-6 right-6 bg-white/95 backdrop-blur-md rounded-3xl p-6 shadow-2xl z-50 flex flex-col gap-4 font-bubbly text-base font-semibold border border-rose-100">
+        <div className="absolute top-24 left-6 right-6 bg-white/95 backdrop-blur-md rounded-3xl p-6 shadow-2xl z-50 flex flex-col gap-3 font-bubbly text-base font-semibold border border-rose-100">
           {/* Mobile Pilot Profile */}
           <div className="pb-3 border-b border-slate-100 flex items-center justify-between">
             {isLoggedIn && currentPilot ? (
@@ -154,19 +232,64 @@ export const Navbar: React.FC<NavbarProps> = ({ onPlayClick }) => {
               </button>
             )}
           </div>
-          {navLinks.map(link => (
+
+          <button
+            onClick={() => handleNavClick('#games')}
+            className="text-left text-slate-700 hover:text-rose-500 py-1"
+          >
+            🎮 Games Arcade
+          </button>
+          <button
+            onClick={() => handleNavClick('#leaderboard')}
+            className="text-left text-slate-700 hover:text-rose-500 py-1"
+          >
+            🏆 Leaderboard
+          </button>
+          <button
+            onClick={() => handleNavClick('#prizes')}
+            className="text-left text-slate-700 hover:text-rose-500 py-1"
+          >
+            🎁 Prizes
+          </button>
+          <button
+            onClick={() => handleNavClick('#blog', true)}
+            className="text-left text-rose-600 hover:text-rose-700 font-bold py-1 flex items-center justify-between"
+          >
+            <span>📰 Mission Blog (Completed to PDR)</span>
+            <span className="text-xs bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200">New</span>
+          </button>
+          <button
+            onClick={() => handleNavClick('#cansat')}
+            className="text-left text-slate-700 hover:text-rose-500 py-1"
+          >
+            🛰️ What is CanSat?
+          </button>
+          <button
+            onClick={() => handleNavClick('#team')}
+            className="text-left text-slate-700 hover:text-rose-500 py-1"
+          >
+            👥 Team SKYLINK
+          </button>
+
+          {/* External Links */}
+          <div className="pt-3 border-t border-slate-100 flex flex-col gap-2 text-xs">
             <a
-              key={link.href}
-              href={link.href}
-              onClick={() => {
-                sound.playClick(650);
-                setMobileMenuOpen(false);
-              }}
-              className="text-slate-700 hover:text-rose-500 py-1"
+              href="https://linktr.ee/qr/2a450f9d-f8f9-4041-bca6-d3176b9d65b6"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-2 rounded-xl flex items-center justify-between font-bold"
             >
-              {link.label}
+              <span>🌲 Official Team Linktree</span>
+              <ExternalLink size={14} />
             </a>
-          ))}
+            <a
+              href="mailto:skylinkutb@gmail.com"
+              className="text-slate-600 bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl flex items-center justify-between"
+            >
+              <span>✉️ skylinkutb@gmail.com</span>
+              <Mail size={14} />
+            </a>
+          </div>
         </div>
       )}
     </nav>

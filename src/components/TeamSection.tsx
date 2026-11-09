@@ -1,5 +1,5 @@
 import React from 'react';
-import { Mail, GraduationCap } from 'lucide-react';
+import { Mail, GraduationCap, ExternalLink } from 'lucide-react';
 import type { TeamMember } from '../types';
 
 const MEMBERS: TeamMember[] = [
@@ -93,15 +93,25 @@ export const TeamSection: React.FC = () => {
         ))}
       </div>
 
-      {/* Workshop request CTA */}
-      <div className="inline-flex items-center gap-3 bg-white border border-rose-200 rounded-full px-6 py-3 shadow-sm text-xs font-medium text-slate-600">
+      {/* Workshop request CTA & Linktree */}
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-3 bg-white/90 border border-rose-200 rounded-3xl sm:rounded-full px-6 py-3.5 shadow-sm text-xs font-medium text-slate-600">
         <span>Want a live CanSat launch demo or STEM presentation at your school?</span>
-        <a
-          href="mailto:outreach@skylink-cansat.org"
-          className="px-4 py-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-full font-bubbly font-semibold transition-all inline-flex items-center gap-1.5 shadow-sm cursor-pointer"
-        >
-          <Mail size={12} /> Contact Team
-        </a>
+        <div className="flex items-center gap-2">
+          <a
+            href="mailto:skylinkutb@gmail.com"
+            className="px-4 py-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-full font-bubbly font-semibold transition-all inline-flex items-center gap-1.5 shadow-sm cursor-pointer"
+          >
+            <Mail size={12} /> Contact Team
+          </a>
+          <a
+            href="https://linktr.ee/qr/2a450f9d-f8f9-4041-bca6-d3176b9d65b6"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-3.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-full font-bubbly font-semibold transition-all inline-flex items-center gap-1 shadow-sm cursor-pointer"
+          >
+            <ExternalLink size={11} /> Linktree
+          </a>
+        </div>
       </div>
     </section>
   );

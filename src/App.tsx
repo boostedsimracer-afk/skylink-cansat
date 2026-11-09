@@ -9,6 +9,7 @@ import { ArcadeSection } from './components/ArcadeSection';
 import { LeaderboardSection } from './components/LeaderboardSection';
 import { PrizeSection } from './components/PrizeSection';
 import { BlogSection } from './components/BlogSection';
+import { BlogPage } from './components/BlogPage';
 import { CanSatViewer } from './components/CanSatViewer';
 import { AboutCanSat } from './components/AboutCanSat';
 import { TeamSection } from './components/TeamSection';
@@ -18,6 +19,13 @@ import { AdminModal } from './components/AdminModal';
 import { sound } from './utils/audio';
 
 export function AppContent() {
+  const [currentView, setCurrentView] = useState<'home' | 'blog'>(() => {
+    if (typeof window !== 'undefined') {
+      return window.location.hash.toLowerCase().includes('blog') ? 'blog' : 'home';
+    }
+    return 'home';
+  });
+
   const [activeGame, setActiveGame] = useState<GameId | null>(null);
   const [adminModalOpen, setAdminModalOpen] = useState<boolean>(false);
   const [leaderboardEntries, setLeaderboardEntries] = useState<LeaderboardEntry[]>([]);
@@ -34,6 +42,13 @@ export function AppContent() {
   useEffect(() => {
     refreshLeaderboard();
 
+    // Listen to hash changes for deep linking to #blog
+    const handleHashChange = () => {
+      const isBlog = window.location.hash.toLowerCase().includes('blog');
+      setCurrentView(isBlog ? 'blog' : 'home');
+    };
+    window.addEventListener('hashchange', handleHashChange);
+
     // Auto-poll every 6 seconds so when anyone completes a game on their phone,
     // the leaderboard live updates on all attendees' screens & projectors!
     // Pauses while a player is inside a game to prevent any screen flashing/interruptions.
@@ -43,7 +58,10 @@ export function AppContent() {
       }
     }, 6000);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('hashchange', handleHashChange);
+    };
   }, []);
 
   const handleLaunchGame = (gameId: GameId) => {
@@ -52,12 +70,27 @@ export function AppContent() {
   };
 
   const handleScrollToGames = () => {
-    const el = document.getElementById('games');
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
+    if (currentView === 'blog') {
+      setCurrentView('home');
+      window.location.hash = '';
+      setTimeout(() => {
+        const el = document.getElementById('games');
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+      }, 150);
     } else {
-      setActiveGame('flappy');
+      const el = document.getElementById('games');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        setActiveGame('flappy');
+      }
     }
+  };
+
+  const handleSelectView = (view: 'home' | 'blog') => {
+    setCurrentView(view);
+    window.location.hash = view === 'blog' ? 'blog' : '';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
@@ -69,41 +102,56 @@ export function AppContent() {
       {/* Monolithic Glowing Frosted Tablet Frame (Matching user reference) */}
       <div className="w-full max-w-6xl glow-frame relative overflow-hidden backdrop-blur-md">
         {/* Top Navbar */}
-        <Navbar onPlayClick={handleScrollToGames} />
+        <Navbar
+          onPlayClick={handleScrollToGames}
+          currentView={currentView}
+          onSelectView={handleSelectView}
+        />
 
-        {/* Main Content Sections (Minimalist, Playful, Bubbly) */}
+        {/* Main Content View Switcher */}
         <main>
-          {/* 1. Hero */}
-          <Hero onPlayClick={handleScrollToGames} />
+          {currentView === 'blog' ? (
+            /* DEDICATED BLOG & MISSION EVIDENCE PAGE */
+            <BlogPage
+              onBackToArcade={() => handleSelectView('home')}
+              onOpenGame={handleLaunchGame}
+            />
+          ) : (
+            /* HOME & INTERACTIVE ARCADE VIEW */
+            <>
+              {/* 1. Hero */}
+              <Hero onPlayClick={handleScrollToGames} />
 
-          {/* 2. Interactive 5 Mini-Games Arcade */}
-          <ArcadeSection
-            onSelectGame={handleLaunchGame}
-            entries={leaderboardEntries}
-          />
+              {/* 2. Interactive 5 Mini-Games Arcade */}
+              <ArcadeSection
+                onSelectGame={handleLaunchGame}
+                entries={leaderboardEntries}
+              />
 
-          {/* 3. Live Leaderboard System */}
-          <LeaderboardSection
-            entries={leaderboardEntries}
-            onOpenGame={handleLaunchGame}
-            onOpenAdmin={() => setAdminModalOpen(true)}
-            onRefresh={refreshLeaderboard}
-          />
+              {/* 3. Live Leaderboard System */}
+              <LeaderboardSection
+                entries={leaderboardEntries}
+                onOpenGame={handleLaunchGame}
+                onOpenAdmin={() => setAdminModalOpen(true)}
+                onRefresh={refreshLeaderboard}
+              />
 
-          {/* 4. Prizes Pool */}
-          <PrizeSection />
+              {/* 4. Prizes Pool */}
+              <PrizeSection />
 
-          {/* 5. Mission Log & Outreach Blog */}
-          <BlogSection />
+              {/* 5. Mission Log & Outreach Blog Preview */}
+              <BlogSection onOpenFullBlog={() => handleSelectView('blog')} />
 
-          {/* 6. What's Inside CanSat */}
-          <CanSatViewer />
+              {/* 6. What's Inside CanSat */}
+              <CanSatViewer />
 
-          {/* 6. How it Works (5 Steps) */}
-          <AboutCanSat />
+              {/* 7. How it Works (5 Steps) */}
+              <AboutCanSat />
 
-          {/* 7. The Team */}
-          <TeamSection />
+              {/* 8. The Team */}
+              <TeamSection />
+            </>
+          )}
         </main>
 
         {/* Footer */}

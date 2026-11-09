@@ -14,11 +14,21 @@ export const Footer: React.FC = () => {
           <span className="text-slate-500">UTB Bahrain</span>
         </div>
 
-        <div className="flex items-center gap-4 text-slate-500 font-medium">
+        <div className="flex flex-wrap items-center justify-center gap-4 text-slate-500 font-medium">
           <a href="#games" className="hover:text-rose-500 transition-colors">Games</a>
           <a href="#leaderboard" className="hover:text-rose-500 transition-colors">Leaderboard</a>
-          <a href="#prizes" className="hover:text-rose-500 transition-colors">Prizes</a>
-          <a href="mailto:outreach@skylink-cansat.org" className="hover:text-rose-500 transition-colors">Contact</a>
+          <a href="#blog" className="hover:text-rose-500 transition-colors">Mission Blog</a>
+          <a
+            href="https://linktr.ee/qr/2a450f9d-f8f9-4041-bca6-d3176b9d65b6"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-emerald-600 transition-colors flex items-center gap-1 text-slate-700 font-semibold"
+          >
+            <span>🌲 Linktree</span>
+          </a>
+          <a href="mailto:skylinkutb@gmail.com" className="hover:text-rose-500 transition-colors font-medium">
+            skylinkutb@gmail.com
+          </a>
         </div>
       </div>
     </footer>
