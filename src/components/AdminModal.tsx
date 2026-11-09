@@ -1,7 +1,17 @@
-import React, { useState } from 'react';
-import { Download, Key, RefreshCw, Trash2, X, Award } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Award, Check, Copy, Database, Download, Globe, Key, RefreshCw, Trash2, Users, X } from 'lucide-react';
 import type { LeaderboardEntry } from '../types';
+import type { PilotAccount } from '../types/auth';
 import { clearAllLeaderboard, downloadCSV, exportLeaderboardCSV, resetLeaderboardToDefault } from '../utils/storage';
+import {
+  clearCloudConfig,
+  getCloudConfig,
+  getLocalAccounts,
+  saveCloudConfig,
+  testCloudConnection,
+  SUPABASE_SQL_SETUP,
+} from '../utils/cloudDb';
+import { useAuth } from '../context/AuthContext';
 import { sound } from '../utils/audio';
 
 interface AdminModalProps {
@@ -17,9 +27,32 @@ export const AdminModal: React.FC<AdminModalProps> = ({
   onClose,
   onRefresh,
 }) => {
+  const { checkCloudStatus } = useAuth();
   const [passcode, setPasscode] = useState<string>('');
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [authError, setAuthError] = useState<string>('');
+  const [activeTab, setActiveTab] = useState<'submissions' | 'database' | 'pilots'>('submissions');
+
+  // Database Tab States
+  const [supabaseUrl, setSupabaseUrl] = useState<string>('');
+  const [supabaseAnonKey, setSupabaseAnonKey] = useState<string>('');
+  const [testResult, setTestResult] = useState<{ ok: boolean; message: string } | null>(null);
+  const [isTesting, setIsTesting] = useState<boolean>(false);
+  const [copiedSql, setCopiedSql] = useState<boolean>(false);
+
+  // Pilots list
+  const [pilotAccounts, setPilotAccounts] = useState<PilotAccount[]>([]);
+
+  useEffect(() => {
+    if (isOpen) {
+      const existing = getCloudConfig();
+      if (existing) {
+        setSupabaseUrl(existing.supabaseUrl);
+        setSupabaseAnonKey(existing.supabaseAnonKey);
+      }
+      setPilotAccounts(getLocalAccounts());
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -58,9 +91,54 @@ export const AdminModal: React.FC<AdminModalProps> = ({
     }
   };
 
+  const handleSaveDatabaseConfig = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!supabaseUrl.trim() || !supabaseAnonKey.trim()) {
+      setTestResult({ ok: false, message: 'Please provide both Supabase URL and Anon Key.' });
+      return;
+    }
+
+    saveCloudConfig({
+      supabaseUrl: supabaseUrl.trim(),
+      supabaseAnonKey: supabaseAnonKey.trim(),
+    });
+
+    checkCloudStatus();
+    setIsTesting(true);
+    const res = await testCloudConnection();
+    setIsTesting(false);
+    setTestResult(res);
+
+    if (res.ok) {
+      sound.playFanfare();
+      onRefresh();
+    } else {
+      sound.playCrash();
+    }
+  };
+
+  const handleDisconnectDatabase = () => {
+    if (window.confirm('Disconnect cloud database and revert to local booth storage?')) {
+      clearCloudConfig();
+      setSupabaseUrl('');
+      setSupabaseAnonKey('');
+      setTestResult(null);
+      checkCloudStatus();
+      onRefresh();
+      sound.playClick(500);
+    }
+  };
+
+  const handleCopySql = () => {
+    navigator.clipboard.writeText(SUPABASE_SQL_SETUP);
+    setCopiedSql(true);
+    sound.playClick(800);
+    setTimeout(() => setCopiedSql(false), 2500);
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-      <div className="relative w-full max-w-2xl bg-white border border-slate-200 rounded-[32px] p-7 shadow-2xl max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="relative w-full max-w-2xl bg-white border border-rose-100 rounded-[32px] p-6 sm:p-7 shadow-2xl max-h-[92vh] flex flex-col font-sans">
         <button
           onClick={onClose}
           className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer p-1 rounded-full hover:bg-slate-100"
@@ -69,13 +147,15 @@ export const AdminModal: React.FC<AdminModalProps> = ({
         </button>
 
         {!isAuthenticated ? (
-          <div className="text-center py-6 max-w-sm mx-auto">
-            <div className="w-14 h-14 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center mx-auto mb-4 text-slate-800">
+          <div className="text-center py-6 max-w-sm mx-auto font-sans">
+            <div className="w-14 h-14 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center mx-auto mb-4 text-rose-600">
               <Key size={26} />
             </div>
-            <h3 className="text-xl font-bold text-slate-900 mb-1">Organizer & Prize Desk</h3>
-            <p className="text-slate-500 text-xs mb-5">
-              Access attendee contact details and export CSV for prize distribution.
+            <h3 className="text-2xl font-bubbly font-bold text-slate-900 mb-1">
+              Organizer & Cloud Portal
+            </h3>
+            <p className="text-slate-500 text-xs mb-5 font-medium">
+              Access prize contact lists, configure global cloud database, and manage event accounts.
             </p>
 
             <form onSubmit={handleUnlock} className="space-y-3">
@@ -84,121 +164,311 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                 placeholder="Enter passcode (default: cansat2026)"
                 value={passcode}
                 onChange={e => setPasscode(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-center text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-400 focus:bg-white font-mono text-sm"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-center text-slate-900 placeholder-slate-400 focus:outline-none focus:border-rose-400 focus:bg-white font-mono text-sm"
                 autoFocus
               />
               {authError && <div className="text-rose-600 text-xs font-mono">{authError}</div>}
               <div>
                 <button
                   type="submit"
-                  className="w-full py-3 bg-[#181C24] hover:bg-black text-white font-semibold rounded-full transition-all shadow-sm text-xs uppercase tracking-wider cursor-pointer"
+                  className="w-full py-3 bg-rose-500 hover:bg-rose-600 text-white font-bubbly font-bold rounded-2xl transition-all shadow-md shadow-rose-500/20 text-xs uppercase tracking-wider cursor-pointer"
                 >
-                  Unlock Admin Portal
+                  Unlock Portal
                 </button>
               </div>
-              <div className="text-[11px] text-slate-400">
-                Organizer hint: default is <code className="text-slate-800 font-mono">cansat2026</code>
+              <div className="text-[11px] text-slate-400 font-sans">
+                Organizer passcode: <code className="text-slate-800 font-mono font-bold">cansat2026</code>
               </div>
             </form>
           </div>
         ) : (
           <div className="flex flex-col h-full overflow-hidden">
-            {/* Header */}
-            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-600">
-                  <Award size={20} />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-slate-900">Prize Distribution Desk</h3>
-                  <p className="text-xs text-slate-400">
-                    Total recorded submissions: <span className="text-slate-900 font-bold">{entries.length}</span>
-                  </p>
-                </div>
+            {/* Header with Navigation Tabs */}
+            <div className="flex flex-wrap items-center justify-between pb-3 border-b border-slate-100 gap-2">
+              <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-2xl font-bubbly text-xs font-semibold">
+                <button
+                  onClick={() => setActiveTab('submissions')}
+                  className={`px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer ${
+                    activeTab === 'submissions'
+                      ? 'bg-white text-rose-600 shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <Award size={14} />
+                  <span>Submissions ({entries.length})</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('database')}
+                  className={`px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer ${
+                    activeTab === 'database'
+                      ? 'bg-white text-rose-600 shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <Database size={14} />
+                  <span>Cloud Database</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('pilots')}
+                  className={`px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer ${
+                    activeTab === 'pilots'
+                      ? 'bg-white text-rose-600 shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <Users size={14} />
+                  <span>Pilots ({pilotAccounts.length})</span>
+                </button>
               </div>
 
-              <div className="flex items-center gap-2">
+              {activeTab === 'submissions' && (
                 <button
                   onClick={handleExportCSV}
-                  className="px-4 py-2 bg-[#181C24] hover:bg-black text-white font-semibold rounded-full text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                  className="px-3.5 py-1.5 bg-rose-500 hover:bg-rose-600 text-white font-bubbly font-semibold rounded-full text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
                 >
                   <Download size={13} /> Export CSV
                 </button>
-              </div>
+              )}
             </div>
 
-            {/* Submissions Table */}
-            <div className="flex-1 overflow-y-auto my-4 border border-slate-200 rounded-2xl bg-[#F8F9FA]">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-100 text-slate-600 font-medium sticky top-0 border-b border-slate-200">
-                  <tr>
-                    <th className="py-2.5 px-3">Player / Callsign</th>
-                    <th className="py-2.5 px-3">Mission</th>
-                    <th className="py-2.5 px-3">Score</th>
-                    <th className="py-2.5 px-3 text-rose-600 font-bold">Contact (Prize)</th>
-                    <th className="py-2.5 px-3">Affiliation</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200 font-sans">
-                  {entries.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="py-8 text-center text-slate-400">
-                        No scores recorded yet. Play a game to test!
-                      </td>
-                    </tr>
-                  ) : (
-                    entries.map((entry, idx) => (
-                      <tr key={entry.id || idx} className="hover:bg-white">
-                        <td className="py-2.5 px-3">
-                          <div className="font-bold text-slate-900">{entry.playerName || entry.callsign}</div>
-                          <div className="text-[10px] font-mono text-slate-400">{entry.callsign}</div>
-                        </td>
-                        <td className="py-2.5 px-3 font-mono uppercase text-[10px] text-slate-600">
-                          {entry.gameId}
-                        </td>
-                        <td className="py-2.5 px-3 font-bold text-slate-900 font-mono">
-                          {entry.score.toLocaleString()}
-                        </td>
-                        <td className="py-2.5 px-3 text-slate-800 font-mono text-[11px]">
-                          {entry.contactInfo ? (
-                            <span className="text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200">
-                              {entry.contactInfo}
-                            </span>
-                          ) : (
-                            <span className="text-slate-400 italic">No contact</span>
-                          )}
-                        </td>
-                        <td className="py-2.5 px-3 text-slate-500">
-                          {entry.schoolOrOrg || '—'}
-                        </td>
+            {/* TAB 1: SUBMISSIONS TABLE */}
+            {activeTab === 'submissions' && (
+              <div className="flex flex-col flex-1 overflow-hidden my-3">
+                <div className="flex-1 overflow-y-auto border border-slate-200 rounded-2xl bg-[#F8F9FA]">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-100 text-slate-600 font-medium sticky top-0 border-b border-slate-200">
+                      <tr>
+                        <th className="py-2.5 px-3">Player / Callsign</th>
+                        <th className="py-2.5 px-3">Mission</th>
+                        <th className="py-2.5 px-3">Score</th>
+                        <th className="py-2.5 px-3 text-rose-600 font-bold">Contact (Prize)</th>
+                        <th className="py-2.5 px-3">Affiliation</th>
                       </tr>
-                    ))
+                    </thead>
+                    <tbody className="divide-y divide-slate-200 font-sans">
+                      {entries.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className="py-8 text-center text-slate-400">
+                            No scores recorded yet. Play a game to test!
+                          </td>
+                        </tr>
+                      ) : (
+                        entries.map((entry, idx) => (
+                          <tr key={entry.id || idx} className="hover:bg-white">
+                            <td className="py-2.5 px-3">
+                              <div className="font-bold text-slate-900">{entry.playerName || entry.callsign}</div>
+                              <div className="text-[10px] font-mono text-slate-400">{entry.callsign}</div>
+                            </td>
+                            <td className="py-2.5 px-3 font-mono uppercase text-[10px] text-slate-600">
+                              {entry.gameId}
+                            </td>
+                            <td className="py-2.5 px-3 font-bold text-slate-900 font-mono">
+                              {entry.score.toLocaleString()}
+                            </td>
+                            <td className="py-2.5 px-3 text-slate-800 font-mono text-[11px]">
+                              {entry.contactInfo ? (
+                                <span className="text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200">
+                                  {entry.contactInfo}
+                                </span>
+                              ) : (
+                                <span className="text-slate-400 italic">No contact</span>
+                              )}
+                            </td>
+                            <td className="py-2.5 px-3 text-slate-500">
+                              {entry.schoolOrOrg || '—'}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Bottom Actions */}
+                <div className="pt-3 flex items-center justify-between text-xs">
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleResetDefaults}
+                      className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-full flex items-center gap-1 transition-colors cursor-pointer text-[11px] font-medium"
+                    >
+                      <RefreshCw size={11} /> Reset Demo Scores
+                    </button>
+                    <button
+                      onClick={handleClearAll}
+                      className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-full flex items-center gap-1 transition-colors cursor-pointer text-[11px] font-medium"
+                    >
+                      <Trash2 size={11} /> Clear All
+                    </button>
+                  </div>
+                  <div className="text-slate-400 text-[11px] font-mono">
+                    SKYLINK UTB Bahrain Console
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 2: CLOUD DATABASE SETUP */}
+            {activeTab === 'database' && (
+              <div className="flex-1 overflow-y-auto my-3 pr-1 space-y-4 text-xs font-sans">
+                {/* Supabase Status Banner */}
+                <div className="p-4 rounded-2xl bg-gradient-to-r from-rose-50 to-orange-50 border border-rose-100 flex items-start gap-3">
+                  <Globe size={20} className="text-rose-600 shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="font-bubbly font-bold text-slate-900 text-sm">
+                      Global Multiplayer Cloud Database (Supabase)
+                    </h4>
+                    <p className="text-slate-600 text-xs mt-1">
+                      Connect a free Supabase PostgreSQL database so player accounts and game scores synchronize globally in real time across all attendees' phones and booth screens!
+                    </p>
+                  </div>
+                </div>
+
+                {/* Config Form */}
+                <form onSubmit={handleSaveDatabaseConfig} className="space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                  <div>
+                    <label className="block text-slate-700 font-bold font-bubbly mb-1">
+                      Supabase Project URL
+                    </label>
+                    <input
+                      type="url"
+                      placeholder="https://xyzcompany.supabase.co"
+                      value={supabaseUrl}
+                      onChange={e => setSupabaseUrl(e.target.value)}
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 font-mono text-xs text-slate-900 focus:outline-none focus:border-rose-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-700 font-bold font-bubbly mb-1">
+                      Supabase Anon (Public) Key
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                      value={supabaseAnonKey}
+                      onChange={e => setSupabaseAnonKey(e.target.value)}
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 font-mono text-xs text-slate-900 focus:outline-none focus:border-rose-400"
+                    />
+                  </div>
+
+                  {testResult && (
+                    <div
+                      className={`p-3 rounded-xl text-xs font-medium ${
+                        testResult.ok
+                          ? 'bg-emerald-50 border border-emerald-200 text-emerald-800'
+                          : 'bg-rose-50 border border-rose-200 text-rose-700'
+                      }`}
+                    >
+                      {testResult.ok ? '✅ ' : '❌ '} {testResult.message}
+                    </div>
                   )}
-                </tbody>
-              </table>
-            </div>
 
-            {/* Bottom Actions */}
-            <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-              <div className="flex gap-2">
-                <button
-                  onClick={handleResetDefaults}
-                  className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-full flex items-center gap-1 transition-colors cursor-pointer text-[11px]"
-                >
-                  <RefreshCw size={11} /> Reset Demo Scores
-                </button>
-                <button
-                  onClick={handleClearAll}
-                  className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-full flex items-center gap-1 transition-colors cursor-pointer text-[11px]"
-                >
-                  <Trash2 size={11} /> Clear All For New Event
-                </button>
-              </div>
+                  <div className="flex items-center gap-2 pt-1 font-bubbly">
+                    <button
+                      type="submit"
+                      disabled={isTesting}
+                      className="flex-1 py-2.5 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50"
+                    >
+                      <Database size={14} />
+                      <span>{isTesting ? 'Testing Connection...' : 'Save & Test Connection'}</span>
+                    </button>
+                    {supabaseUrl && (
+                      <button
+                        type="button"
+                        onClick={handleDisconnectDatabase}
+                        className="px-3 py-2.5 bg-white border border-slate-200 hover:bg-slate-100 text-slate-600 rounded-xl text-xs cursor-pointer"
+                      >
+                        Disconnect
+                      </button>
+                    )}
+                  </div>
+                </form>
 
-              <div className="text-slate-400 text-[11px] font-mono">
-                SKYLINK UTB Bahrain Console
+                {/* 3-Step Setup Instructions & SQL Copy */}
+                <div className="bg-slate-900 text-slate-100 p-4 rounded-2xl space-y-3 font-sans">
+                  <div className="flex items-center justify-between">
+                    <h5 className="font-bubbly font-bold text-sm text-white flex items-center gap-1.5">
+                      <span>⚡ 2-Minute Supabase Setup Guide</span>
+                    </h5>
+                    <button
+                      type="button"
+                      onClick={handleCopySql}
+                      className="px-3 py-1 bg-rose-500 hover:bg-rose-600 text-white rounded-lg font-bubbly font-bold text-[11px] flex items-center gap-1 cursor-pointer"
+                    >
+                      {copiedSql ? <Check size={12} /> : <Copy size={12} />}
+                      <span>{copiedSql ? 'SQL Copied!' : 'Copy SQL Script'}</span>
+                    </button>
+                  </div>
+
+                  <ol className="list-decimal list-inside space-y-1.5 text-slate-300 text-[11px]">
+                    <li>
+                      Create a free account at{' '}
+                      <a href="https://supabase.com" target="_blank" rel="noreferrer" className="text-rose-400 underline">
+                        supabase.com
+                      </a>{' '}
+                      and click <strong>New Project</strong>.
+                    </li>
+                    <li>
+                      In your Supabase project dashboard, open the <strong>SQL Editor</strong> tab on the left.
+                    </li>
+                    <li>
+                      Click the <strong>Copy SQL Script</strong> button above, paste it into the editor, and click <strong>Run</strong>.
+                    </li>
+                    <li>
+                      Go to <strong>Project Settings → API</strong>, copy your <strong>Project URL</strong> and <strong>anon public key</strong>, and paste them in the form above!
+                    </li>
+                  </ol>
+                </div>
               </div>
-            </div>
+            )}
+
+            {/* TAB 3: REGISTERED PILOTS */}
+            {activeTab === 'pilots' && (
+              <div className="flex flex-col flex-1 overflow-hidden my-3">
+                <div className="flex-1 overflow-y-auto border border-slate-200 rounded-2xl bg-[#F8F9FA]">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-100 text-slate-600 font-medium sticky top-0 border-b border-slate-200">
+                      <tr>
+                        <th className="py-2.5 px-3">Callsign</th>
+                        <th className="py-2.5 px-3">Name</th>
+                        <th className="py-2.5 px-3">School / Org</th>
+                        <th className="py-2.5 px-3">Contact</th>
+                        <th className="py-2.5 px-3">Created</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200 font-sans">
+                      {pilotAccounts.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className="py-8 text-center text-slate-400">
+                            No pilot accounts registered yet.
+                          </td>
+                        </tr>
+                      ) : (
+                        pilotAccounts.map((pilot, idx) => (
+                          <tr key={pilot.id || idx} className="hover:bg-white">
+                            <td className="py-2.5 px-3 font-mono font-bold text-rose-600">
+                              {pilot.callsign}
+                            </td>
+                            <td className="py-2.5 px-3 text-slate-900 font-medium">
+                              {pilot.playerName}
+                            </td>
+                            <td className="py-2.5 px-3 text-slate-500">
+                              {pilot.schoolOrOrg || '—'}
+                            </td>
+                            <td className="py-2.5 px-3 text-slate-700 font-mono text-[11px]">
+                              {pilot.contactInfo || '—'}
+                            </td>
+                            <td className="py-2.5 px-3 text-slate-400 text-[10px]">
+                              {new Date(pilot.createdAt).toLocaleDateString()}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

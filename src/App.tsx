@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import type { GameId, LeaderboardEntry } from './types';
-import { getLeaderboard } from './utils/storage';
+import { fetchGlobalLeaderboard } from './utils/cloudDb';
+import { AuthProvider } from './context/AuthContext';
+import { AuthModal } from './components/auth/AuthModal';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { ArcadeSection } from './components/ArcadeSection';
@@ -14,18 +16,28 @@ import { GameModal } from './components/games/GameModal';
 import { AdminModal } from './components/AdminModal';
 import { sound } from './utils/audio';
 
-export function App() {
+export function AppContent() {
   const [activeGame, setActiveGame] = useState<GameId | null>(null);
   const [adminModalOpen, setAdminModalOpen] = useState<boolean>(false);
   const [leaderboardEntries, setLeaderboardEntries] = useState<LeaderboardEntry[]>([]);
 
-  const refreshLeaderboard = () => {
-    const data = getLeaderboard();
-    setLeaderboardEntries(data);
+  const refreshLeaderboard = async () => {
+    try {
+      const data = await fetchGlobalLeaderboard();
+      setLeaderboardEntries(data);
+    } catch {}
   };
 
   useEffect(() => {
     refreshLeaderboard();
+
+    // Auto-poll every 5 seconds so when anyone completes a game on their phone,
+    // the leaderboard live updates on all attendees' screens & projectors!
+    const interval = setInterval(() => {
+      refreshLeaderboard();
+    }, 5000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const handleLaunchGame = (gameId: GameId) => {
@@ -69,6 +81,7 @@ export function App() {
             entries={leaderboardEntries}
             onOpenGame={handleLaunchGame}
             onOpenAdmin={() => setAdminModalOpen(true)}
+            onRefresh={refreshLeaderboard}
           />
 
           {/* 4. Prizes Pool */}
@@ -104,7 +117,18 @@ export function App() {
         onClose={() => setAdminModalOpen(false)}
         onRefresh={refreshLeaderboard}
       />
+
+      {/* Pilot Account Authentication Modal */}
+      <AuthModal />
     </div>
+  );
+}
+
+export function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
 

@@ -1,21 +1,26 @@
 import React, { useState } from 'react';
-import { Crown, Key, Search } from 'lucide-react';
+import { Crown, Globe, Key, RefreshCw, Search } from 'lucide-react';
 import type { GameId, LeaderboardEntry } from '../types';
+import { useAuth } from '../context/AuthContext';
 import { sound } from '../utils/audio';
 
 interface LeaderboardSectionProps {
   entries: LeaderboardEntry[];
   onOpenGame: (gameId: GameId) => void;
   onOpenAdmin: () => void;
+  onRefresh?: () => void;
 }
 
 export const LeaderboardSection: React.FC<LeaderboardSectionProps> = ({
   entries,
   onOpenGame,
   onOpenAdmin,
+  onRefresh,
 }) => {
+  const { currentPilot, isCloudConnected } = useAuth();
   const [selectedTab, setSelectedTab] = useState<'all' | GameId>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
 
   const tabs: { id: 'all' | GameId; label: string; emoji: string }[] = [
     { id: 'all', label: 'Overall', emoji: '🌟' },
@@ -25,6 +30,15 @@ export const LeaderboardSection: React.FC<LeaderboardSectionProps> = ({
     { id: 'lander', label: 'Lander', emoji: '🎯' },
     { id: 'collector', label: 'Catcher', emoji: '⚡' },
   ];
+
+  const handleManualRefresh = () => {
+    if (onRefresh) {
+      sound.playClick(800);
+      setIsRefreshing(true);
+      onRefresh();
+      setTimeout(() => setIsRefreshing(false), 700);
+    }
+  };
 
   const filteredEntries = entries
     .filter(entry => {
@@ -60,6 +74,29 @@ export const LeaderboardSection: React.FC<LeaderboardSectionProps> = ({
     <section id="leaderboard" className="py-14 px-4 sm:px-12 max-w-4xl mx-auto">
       {/* Header */}
       <div className="text-center mb-8">
+        <div className="inline-flex items-center gap-2 mb-3">
+          <div
+            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bubbly font-semibold shadow-sm ${
+              isCloudConnected
+                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                : 'bg-white text-slate-600 border border-rose-100'
+            }`}
+          >
+            <Globe size={13} className={isCloudConnected ? 'text-emerald-500 animate-pulse' : 'text-amber-500'} />
+            <span>{isCloudConnected ? 'Global Live Cloud Synchronized' : 'Booth Storage (Local Station)'}</span>
+          </div>
+
+          {onRefresh && (
+            <button
+              onClick={handleManualRefresh}
+              title="Refresh Standings"
+              className="p-1 rounded-full bg-white text-slate-400 hover:text-rose-600 border border-rose-100 transition-colors cursor-pointer"
+            >
+              <RefreshCw size={13} className={isRefreshing ? 'animate-spin text-rose-500' : ''} />
+            </button>
+          )}
+        </div>
+
         <h2 className="text-3xl sm:text-5xl font-bubbly font-bold text-slate-900 tracking-tight mb-2">
           Live Leaderboard 🏆
         </h2>
@@ -126,11 +163,22 @@ export const LeaderboardSection: React.FC<LeaderboardSectionProps> = ({
           <div className="grid grid-cols-3 gap-3 items-end mb-8 text-center font-bubbly">
             {/* 2nd Place */}
             {top2 ? (
-              <div className="bg-white/80 border border-slate-200/90 rounded-[28px] p-4 flex flex-col items-center shadow-sm">
+              <div className={`bg-white/80 border rounded-[28px] p-4 flex flex-col items-center shadow-sm ${
+                currentPilot && top2.callsign === currentPilot.callsign
+                  ? 'border-rose-400 bg-rose-50/40 ring-2 ring-rose-200'
+                  : 'border-slate-200/90'
+              }`}>
                 <span className="text-2xl mb-1">🥈</span>
-                <span className="text-xs font-bold text-slate-800 truncate max-w-full">
-                  {top2.callsign}
-                </span>
+                <div className="flex items-center gap-1 truncate max-w-full">
+                  <span className="text-xs font-bold text-slate-800 truncate">
+                    {top2.callsign}
+                  </span>
+                  {currentPilot && top2.callsign === currentPilot.callsign && (
+                    <span className="text-[9px] bg-rose-500 text-white px-1.5 py-0.2 rounded-full font-bold">
+                      YOU
+                    </span>
+                  )}
+                </div>
                 <span className="text-sm font-extrabold text-slate-900 font-mono mt-0.5">
                   {top2.score.toLocaleString()}
                 </span>
@@ -142,13 +190,24 @@ export const LeaderboardSection: React.FC<LeaderboardSectionProps> = ({
 
             {/* 1st Place */}
             {top1 && (
-              <div className="bg-white border-2 border-rose-400 rounded-[32px] p-5 flex flex-col items-center shadow-lg -translate-y-2">
+              <div className={`bg-white border-2 rounded-[32px] p-5 flex flex-col items-center shadow-lg -translate-y-2 ${
+                currentPilot && top1.callsign === currentPilot.callsign
+                  ? 'border-rose-500 ring-4 ring-rose-200'
+                  : 'border-rose-400'
+              }`}>
                 <div className="w-8 h-8 rounded-full bg-rose-500 flex items-center justify-center text-white mb-1 shadow">
                   <Crown size={16} />
                 </div>
-                <span className="text-sm font-bold text-slate-900 truncate max-w-full">
-                  {top1.callsign}
-                </span>
+                <div className="flex items-center gap-1 truncate max-w-full">
+                  <span className="text-sm font-bold text-slate-900 truncate">
+                    {top1.callsign}
+                  </span>
+                  {currentPilot && top1.callsign === currentPilot.callsign && (
+                    <span className="text-[9px] bg-rose-500 text-white px-1.5 py-0.2 rounded-full font-bold">
+                      YOU
+                    </span>
+                  )}
+                </div>
                 <span className="text-base font-extrabold text-rose-600 font-mono mt-0.5">
                   {top1.score.toLocaleString()}
                 </span>
@@ -160,11 +219,22 @@ export const LeaderboardSection: React.FC<LeaderboardSectionProps> = ({
 
             {/* 3rd Place */}
             {top3 ? (
-              <div className="bg-white/80 border border-slate-200/90 rounded-[28px] p-4 flex flex-col items-center shadow-sm">
+              <div className={`bg-white/80 border rounded-[28px] p-4 flex flex-col items-center shadow-sm ${
+                currentPilot && top3.callsign === currentPilot.callsign
+                  ? 'border-rose-400 bg-rose-50/40 ring-2 ring-rose-200'
+                  : 'border-slate-200/90'
+              }`}>
                 <span className="text-2xl mb-1">🥉</span>
-                <span className="text-xs font-bold text-slate-800 truncate max-w-full">
-                  {top3.callsign}
-                </span>
+                <div className="flex items-center gap-1 truncate max-w-full">
+                  <span className="text-xs font-bold text-slate-800 truncate">
+                    {top3.callsign}
+                  </span>
+                  {currentPilot && top3.callsign === currentPilot.callsign && (
+                    <span className="text-[9px] bg-rose-500 text-white px-1.5 py-0.2 rounded-full font-bold">
+                      YOU
+                    </span>
+                  )}
+                </div>
                 <span className="text-sm font-extrabold text-slate-900 font-mono mt-0.5">
                   {top3.score.toLocaleString()}
                 </span>
@@ -191,35 +261,49 @@ export const LeaderboardSection: React.FC<LeaderboardSectionProps> = ({
 
             {/* Remaining Rows */}
             <div className="divide-y divide-rose-50">
-              {remaining.map((entry, idx) => (
-                <div
-                  key={entry.id || idx}
-                  className="py-3 px-3 flex items-center justify-between hover:bg-rose-50/50 rounded-2xl transition-colors font-sans text-xs"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="font-bubbly font-bold text-slate-400 w-5 text-center">
-                      #{idx + 4}
-                    </span>
-                    <div>
-                      <span className="font-bold text-slate-800 font-bubbly text-sm">
-                        {entry.callsign}
+              {remaining.map((entry, idx) => {
+                const isUser = currentPilot && entry.callsign === currentPilot.callsign;
+                return (
+                  <div
+                    key={entry.id || idx}
+                    className={`py-3 px-3 flex items-center justify-between rounded-2xl transition-colors font-sans text-xs ${
+                      isUser
+                        ? 'bg-rose-50/80 border border-rose-200/80 font-semibold'
+                        : 'hover:bg-rose-50/50'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="font-bubbly font-bold text-slate-400 w-5 text-center">
+                        #{idx + 4}
                       </span>
-                      <span className="text-[10px] text-slate-400 block font-sans">
-                        {getGameLabel(entry.gameId)}
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-bold text-slate-800 font-bubbly text-sm">
+                            {entry.callsign}
+                          </span>
+                          {isUser && (
+                            <span className="text-[9px] bg-rose-500 text-white px-1.5 py-0.5 rounded-full font-bold">
+                              YOU
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-[10px] text-slate-400 block font-sans">
+                          {getGameLabel(entry.gameId)}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="text-right">
+                      <span className="font-extrabold text-slate-900 font-mono text-sm block">
+                        {entry.score.toLocaleString()} pts
+                      </span>
+                      <span className="text-[10px] text-slate-400">
+                        {entry.schoolOrOrg || 'Independent'}
                       </span>
                     </div>
                   </div>
-
-                  <div className="text-right">
-                    <span className="font-extrabold text-slate-900 font-mono text-sm block">
-                      {entry.score.toLocaleString()} pts
-                    </span>
-                    <span className="text-[10px] text-slate-400">
-                      {entry.schoolOrOrg || 'Independent'}
-                    </span>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </>
