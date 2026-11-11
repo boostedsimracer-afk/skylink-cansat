@@ -3,7 +3,9 @@ export interface PilotAccount {
   callsign: string;
   playerName: string;
   schoolOrOrg: string;
-  contactInfo: string;
+  email?: string;
+  phone?: string;
+  contactInfo?: string;
   pin: string;
   createdAt: number;
 }

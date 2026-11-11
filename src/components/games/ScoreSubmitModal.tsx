@@ -41,8 +41,8 @@ export const ScoreSubmitModal: React.FC<ScoreSubmitModalProps> = ({
         setFormData({
           callsign: currentPilot.callsign,
           playerName: currentPilot.playerName,
-          contactInfo: currentPilot.contactInfo,
-          schoolOrOrg: currentPilot.schoolOrOrg,
+          contactInfo: currentPilot.contactInfo || currentPilot.email || '',
+          schoolOrOrg: currentPilot.schoolOrOrg || '',
         });
       } else {
         const saved = getSavedPlayerProfile();
@@ -83,8 +83,8 @@ export const ScoreSubmitModal: React.FC<ScoreSubmitModalProps> = ({
 
     const finalCallsign = (callsignToUse || nameToUse).toUpperCase().replace(/\s+/g, '_');
     const finalName = nameToUse || finalCallsign;
-    const finalSchool = (isLoggedIn && currentPilot ? currentPilot.schoolOrOrg : formData.schoolOrOrg).trim();
-    const finalContact = (isLoggedIn && currentPilot ? currentPilot.contactInfo : formData.contactInfo).trim();
+    const finalSchool = (isLoggedIn && currentPilot ? (currentPilot.schoolOrOrg || '') : formData.schoolOrOrg).trim();
+    const finalContact = (isLoggedIn && currentPilot ? (currentPilot.contactInfo || currentPilot.email || '') : formData.contactInfo).trim();
 
     setIsSubmitting(true);
 

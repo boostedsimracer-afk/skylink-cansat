@@ -21,6 +21,8 @@ interface AuthContextType {
     callsign: string;
     playerName: string;
     schoolOrOrg?: string;
+    email?: string;
+    phone?: string;
     contactInfo?: string;
     pin: string;
   }) => Promise<{ ok: boolean; message: string }>;
@@ -69,6 +71,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     callsign: string;
     playerName: string;
     schoolOrOrg?: string;
+    email?: string;
+    phone?: string;
     contactInfo?: string;
     pin: string;
   }) => {

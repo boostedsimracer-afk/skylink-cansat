@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Crown, Globe, Key, RefreshCw, Search } from 'lucide-react';
+import { Crown, Globe, RefreshCw, Search } from 'lucide-react';
 import type { GameId, LeaderboardEntry } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { sound } from '../utils/audio';
@@ -7,14 +7,12 @@ import { sound } from '../utils/audio';
 interface LeaderboardSectionProps {
   entries: LeaderboardEntry[];
   onOpenGame: (gameId: GameId) => void;
-  onOpenAdmin: () => void;
   onRefresh?: () => void;
 }
 
 export const LeaderboardSection: React.FC<LeaderboardSectionProps> = ({
   entries,
   onOpenGame,
-  onOpenAdmin,
   onRefresh,
 }) => {
   const { currentPilot, isCloudConnected } = useAuth();
@@ -126,18 +124,6 @@ export const LeaderboardSection: React.FC<LeaderboardSectionProps> = ({
             </button>
           ))}
         </div>
-
-        {/* Organizer Key */}
-        <button
-          onClick={() => {
-            sound.playClick(600);
-            onOpenAdmin();
-          }}
-          className="px-4 py-1.5 bg-white text-slate-700 hover:text-slate-900 rounded-full font-bubbly text-xs font-semibold border border-rose-100 shadow-sm flex items-center gap-1.5 cursor-pointer bubble-btn"
-        >
-          <Key size={13} className="text-rose-500" />
-          <span>Organizer Desk</span>
-        </button>
       </div>
 
       {/* Empty State when no scores submitted yet */}

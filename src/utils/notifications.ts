@@ -1,5 +1,5 @@
 import type { GameId, LeaderboardEntry } from '../types';
-import { getLocalAccounts } from './cloudDb';
+import { getCloudConfig, getLocalAccounts } from './cloudDb';
 
 export interface BeatNotification {
   id: string;
@@ -48,7 +48,12 @@ export function getEmailConfig(): EmailServiceConfig | null {
     };
   }
 
-  return null;
+  // Production default credentials for SKYLINK UTB Bahrain CanSat
+  return {
+    serviceId: 'service_dmujblr',
+    templateId: '1ja2yd9',
+    publicKey: '3P9K2A8Ma7tqeYmCn',
+  };
 }
 
 export function saveEmailConfig(config: EmailServiceConfig): void {
@@ -101,13 +106,42 @@ export async function checkAndNotifyOvertakenPilots(
   const overtaken = gameEntries.find(e => e.score < newEntry.score);
   if (!overtaken) return null;
 
-  // Find overtaken pilot's contact email (from entry or registered accounts)
+  // Find overtaken pilot's contact email (from entry, local accounts, or Supabase profiles)
   let email = (overtaken.contactInfo || '').trim();
   if (!email.includes('@')) {
     const allAccounts = getLocalAccounts();
     const account = allAccounts.find(a => a.callsign === overtaken.callsign);
-    if (account && account.contactInfo.includes('@')) {
-      email = account.contactInfo.trim();
+    if (account && (account.email || account.contactInfo)?.includes('@')) {
+      email = (account.email || account.contactInfo || '').trim();
+    }
+  }
+
+  // If still not found, query live Supabase profiles table
+  if (!email.includes('@')) {
+    try {
+      const config = getCloudConfig();
+      if (config) {
+        const res = await fetch(
+          `${config.supabaseUrl}/rest/v1/profiles?callsign=eq.${encodeURIComponent(overtaken.callsign)}&select=email,contact_info&limit=1`,
+          {
+            headers: {
+              apikey: config.supabaseAnonKey,
+              Authorization: `Bearer ${config.supabaseAnonKey}`,
+            },
+          }
+        );
+        if (res.ok) {
+          const rows = await res.json();
+          if (Array.isArray(rows) && rows[0]) {
+            const foundEmail = (rows[0].email || rows[0].contact_info || '').trim();
+            if (foundEmail.includes('@')) {
+              email = foundEmail;
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('Could not query pilot email from Supabase:', err);
     }
   }
 
@@ -138,12 +172,16 @@ export async function checkAndNotifyOvertakenPilots(
           user_id: emailConfig.publicKey,
           template_params: {
             to_email: email,
+            email: email,
             to_callsign: overtaken.callsign,
+            callsign: overtaken.callsign,
             challenger_callsign: newEntry.callsign,
+            challenger: newEntry.callsign,
             game_title: gameTitle,
+            game: gameTitle,
             challenger_score: newEntry.score.toLocaleString(),
             old_score: overtaken.score.toLocaleString(),
-            site_url: window.location.href,
+            site_url: typeof window !== 'undefined' ? window.location.href : 'https://boostedsimracer-afk.github.io/skylink-cansat/',
           },
         }),
       });

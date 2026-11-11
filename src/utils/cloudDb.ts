@@ -13,7 +13,7 @@ export const SUPABASE_SQL_SETUP = `-- ==========================================
 -- Paste this script into your Supabase SQL Editor and click RUN.
 -- ========================================================
 
--- 1. Create Leaderboard Table
+-- 1. Create Leaderboard Table (Public rankings)
 create table if not exists public.leaderboard (
   id uuid default gen_random_uuid() primary key,
   game_id text not null,
@@ -21,17 +21,17 @@ create table if not exists public.leaderboard (
   callsign text not null,
   score integer not null,
   school_or_org text,
-  contact_info text,
-  verified boolean default true,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
--- 2. Create Pilot Profiles Table
+-- 2. Create Pilot Profiles Table (Private accounts with contact info & hashed passwords)
 create table if not exists public.profiles (
   id uuid default gen_random_uuid() primary key,
   callsign text unique not null,
   player_name text not null,
   school_or_org text,
+  email text,
+  phone text,
   contact_info text,
   pin text not null,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
@@ -287,6 +287,8 @@ export async function registerPilot(data: {
   callsign: string;
   playerName: string;
   schoolOrOrg?: string;
+  email?: string;
+  phone?: string;
   contactInfo?: string;
   pin: string;
 }): Promise<{ ok: boolean; message: string; pilot?: PilotAccount }> {
@@ -302,13 +304,18 @@ export async function registerPilot(data: {
   }
 
   const hashedPin = await hashPin(data.pin, cleanCallsign);
+  const resolvedEmail = (data.email || '').trim();
+  const resolvedPhone = (data.phone || '').trim();
+  const resolvedContact = (data.contactInfo || `${resolvedEmail} ${resolvedPhone}`).trim();
 
   const newPilot: PilotAccount = {
     id: 'pilot-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6),
     callsign: cleanCallsign,
     playerName: data.playerName.trim(),
     schoolOrOrg: (data.schoolOrOrg || '').trim(),
-    contactInfo: (data.contactInfo || '').trim(),
+    email: resolvedEmail,
+    phone: resolvedPhone,
+    contactInfo: resolvedContact,
     pin: hashedPin,
     createdAt: Date.now(),
   };
@@ -333,7 +340,7 @@ export async function registerPilot(data: {
         }
       }
 
-      // 2. Insert into profiles table with cryptographic hash
+      // 2. Insert into profiles table with cryptographic hash & dedicated email/phone
       const insertRes = await fetch(`${config.supabaseUrl}/rest/v1/profiles`, {
         method: 'POST',
         headers: {
@@ -346,7 +353,9 @@ export async function registerPilot(data: {
           callsign: newPilot.callsign,
           player_name: newPilot.playerName,
           school_or_org: newPilot.schoolOrOrg,
-          contact_info: newPilot.contactInfo,
+          email: resolvedEmail || null,
+          phone: resolvedPhone || null,
+          contact_info: resolvedContact || null,
           pin: hashedPin,
         }),
       });
@@ -399,6 +408,8 @@ export async function loginPilot(
               callsign: profile.callsign,
               playerName: profile.player_name,
               schoolOrOrg: profile.school_or_org || '',
+              email: profile.email || '',
+              phone: profile.phone || '',
               contactInfo: profile.contact_info || '',
               pin: profile.pin,
               createdAt: profile.created_at ? new Date(profile.created_at).getTime() : Date.now(),

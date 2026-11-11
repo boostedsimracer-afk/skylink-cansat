@@ -14,7 +14,6 @@ import { AboutCanSat } from './components/AboutCanSat';
 import { TeamSection } from './components/TeamSection';
 import { Footer } from './components/Footer';
 import { GameModal } from './components/games/GameModal';
-import { AdminModal } from './components/AdminModal';
 import { sound } from './utils/audio';
 
 export function AppContent() {
@@ -26,7 +25,6 @@ export function AppContent() {
   });
 
   const [activeGame, setActiveGame] = useState<GameId | null>(null);
-  const [adminModalOpen, setAdminModalOpen] = useState<boolean>(false);
   const [leaderboardEntries, setLeaderboardEntries] = useState<LeaderboardEntry[]>([]);
   const activeGameRef = useRef<GameId | null>(null);
   activeGameRef.current = activeGame;
@@ -131,7 +129,6 @@ export function AppContent() {
               <LeaderboardSection
                 entries={leaderboardEntries}
                 onOpenGame={handleLaunchGame}
-                onOpenAdmin={() => setAdminModalOpen(true)}
                 onRefresh={refreshLeaderboard}
               />
 
@@ -162,14 +159,6 @@ export function AppContent() {
           onScoreSubmitted={refreshLeaderboard}
         />
       )}
-
-      {/* Organizer / Prize Admin Desk Modal */}
-      <AdminModal
-        isOpen={adminModalOpen}
-        entries={leaderboardEntries}
-        onClose={() => setAdminModalOpen(false)}
-        onRefresh={refreshLeaderboard}
-      />
 
       {/* Pilot Account Authentication Modal */}
       <AuthModal />

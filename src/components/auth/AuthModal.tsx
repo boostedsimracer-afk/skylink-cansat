@@ -14,7 +14,8 @@ export const AuthModal: React.FC = () => {
   const [regCallsign, setRegCallsign] = useState('');
   const [regName, setRegName] = useState('');
   const [regSchool, setRegSchool] = useState('');
-  const [regContact, setRegContact] = useState('');
+  const [regEmail, setRegEmail] = useState('');
+  const [regPhone, setRegPhone] = useState('');
   const [regPin, setRegPin] = useState('');
 
   // Login Form
@@ -33,7 +34,9 @@ export const AuthModal: React.FC = () => {
       callsign: regCallsign,
       playerName: regName,
       schoolOrOrg: regSchool,
-      contactInfo: regContact,
+      email: regEmail,
+      phone: regPhone,
+      contactInfo: `${regEmail} ${regPhone}`.trim(),
       pin: regPin,
     });
 
@@ -198,21 +201,36 @@ export const AuthModal: React.FC = () => {
               </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-bold text-slate-700 font-bubbly mb-1">
-                Contact Info (Phone / Email)
-              </label>
-              <input
-                type="text"
-                placeholder="Required for prize delivery"
-                value={regContact}
-                onChange={e => setRegContact(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:border-rose-400 focus:outline-none"
-              />
-              <p className="text-[10px] text-slate-400 mt-1">
-                🔒 Kept private for team organizers to distribute prizes.
-              </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 font-bubbly mb-1">
+                  Email Address <span className="text-slate-400 font-normal">(Alerts)</span>
+                </label>
+                <input
+                  type="email"
+                  placeholder="pilot@gmail.com"
+                  value={regEmail}
+                  onChange={e => setRegEmail(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:border-rose-400 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 font-bubbly mb-1">
+                  Phone Number <span className="text-slate-400 font-normal">(Prizes)</span>
+                </label>
+                <input
+                  type="tel"
+                  placeholder="+973 3XXXXXXX"
+                  value={regPhone}
+                  onChange={e => setRegPhone(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:border-rose-400 focus:outline-none"
+                />
+              </div>
             </div>
+            <p className="text-[10px] text-slate-400 -mt-1">
+              🔒 Kept private in Supabase for prize contact and score-beaten alerts.
+            </p>
 
             <div>
               <label className="block text-xs font-bold text-slate-700 font-bubbly mb-1">
@@ -221,13 +239,13 @@ export const AuthModal: React.FC = () => {
               <input
                 type="password"
                 required
-                placeholder="4-digit PIN (e.g. 1234)"
+                placeholder="4-digit PIN or password"
                 value={regPin}
                 onChange={e => setRegPin(e.target.value)}
                 className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-900 focus:bg-white focus:border-rose-400 focus:outline-none"
               />
               <p className="text-[10px] text-slate-400 mt-1">
-                Quick PIN to log back in anytime on phone or PC.
+                🔒 Cryptographically hashed using Salted SHA-256 before storage.
               </p>
             </div>
 
