@@ -112,7 +112,7 @@ export const LeaderboardSection: React.FC<LeaderboardSectionProps> = ({
           Live Leaderboard 🏆
         </h2>
         <p className="text-slate-500 text-xs sm:text-sm font-medium">
-          Play games, set new high scores, and win prizes for Overall Top 3 & Game 1st Places!
+          Play the space missions, boost your total combined score, and win prizes for the Overall Top 3!
         </p>
       </div>
 
@@ -182,7 +182,7 @@ export const LeaderboardSection: React.FC<LeaderboardSectionProps> = ({
                   {top2.displayScore.toLocaleString()}
                 </span>
                 <span className="text-[10px] text-slate-500 mt-1 font-sans">
-                  {selectedTab === 'all' ? 'Overall 2nd Prize' : 'Runner-Up'}
+                  {selectedTab === 'all' ? 'Overall 2nd Prize 🥈' : 'Rank #2'}
                 </span>
               </div>
             ) : <div />}
@@ -211,7 +211,7 @@ export const LeaderboardSection: React.FC<LeaderboardSectionProps> = ({
                   {top1.displayScore.toLocaleString()}
                 </span>
                 <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full mt-1.5 font-sans">
-                  🏆 {selectedTab === 'all' ? 'Overall 1st Prize' : 'Game 1st Prize'}
+                  🏆 {selectedTab === 'all' ? 'Overall 1st Prize 🥇' : 'Game Leader'}
                 </span>
               </div>
             )}
@@ -238,7 +238,7 @@ export const LeaderboardSection: React.FC<LeaderboardSectionProps> = ({
                   {top3.displayScore.toLocaleString()}
                 </span>
                 <span className="text-[10px] text-slate-500 mt-1 font-sans">
-                  {selectedTab === 'all' ? 'Overall 3rd Prize' : '3rd Place'}
+                  {selectedTab === 'all' ? 'Overall 3rd Prize 🥉' : 'Rank #3'}
                 </span>
               </div>
             ) : <div />}
