@@ -77,7 +77,11 @@ export function getCloudConfig(): CloudDbConfig | null {
     };
   }
 
-  return null;
+  // 3. Production default for SKYLINK UTB Bahrain CanSat 2026
+  return {
+    supabaseUrl: 'https://qvsovbjvuqpfqexxgvqt.supabase.co',
+    supabaseAnonKey: 'sb_publishable_JaO_rPdO-bi-O_S3S89wyg_5yc6p1bR',
+  };
 }
 
 export function saveCloudConfig(config: CloudDbConfig): void {
