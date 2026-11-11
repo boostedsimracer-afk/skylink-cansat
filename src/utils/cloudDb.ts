@@ -13,15 +13,18 @@ export const SUPABASE_SQL_SETUP = `-- ==========================================
 -- Paste this script into your Supabase SQL Editor and click RUN.
 -- ========================================================
 
--- 1. Create Leaderboard Table (Public rankings)
+-- 1. Create Consolidated Leaderboard Table (1 row per player with total score)
 create table if not exists public.leaderboard (
-  id uuid default gen_random_uuid() primary key,
-  game_id text not null,
+  callsign text primary key,
   player_name text not null,
-  callsign text not null,
-  score integer not null,
   school_or_org text,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+  total_score integer not null default 0,
+  score_flappy integer not null default 0,
+  score_descent integer not null default 0,
+  score_telemetry integer not null default 0,
+  score_lander integer not null default 0,
+  score_collector integer not null default 0,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
 -- 2. Create Pilot Profiles Table (Private accounts with contact info & hashed passwords)
@@ -44,8 +47,9 @@ alter table public.profiles enable row level security;
 -- 4. Set Policies for Public Outreach Website
 create policy "Allow anyone to read leaderboard" on public.leaderboard for select using (true);
 create policy "Allow anyone to insert leaderboard" on public.leaderboard for insert with check (true);
+create policy "Allow anyone to update leaderboard" on public.leaderboard for update using (true);
 
-create policy "Allow anyone to read profiles" on public.profiles for select using (true);
+create policy "Allow anyone to select profiles" on public.profiles for select using (true);
 create policy "Allow anyone to insert profiles" on public.profiles for insert with check (true);
 create policy "Allow anyone to update profiles" on public.profiles for update using (true);
 
@@ -137,7 +141,7 @@ export async function testCloudConnection(): Promise<{ ok: boolean; message: str
   }
 }
 
-// Global Leaderboard Fetch
+// Global Leaderboard Fetch (1 row per player with calculated total score)
 export async function fetchGlobalLeaderboard(): Promise<LeaderboardEntry[]> {
   const localEntries = getLeaderboard();
   const config = getCloudConfig();
@@ -147,7 +151,7 @@ export async function fetchGlobalLeaderboard(): Promise<LeaderboardEntry[]> {
   }
 
   try {
-    const res = await fetch(`${config.supabaseUrl}/rest/v1/leaderboard?select=*&order=score.desc&limit=200`, {
+    const res = await fetch(`${config.supabaseUrl}/rest/v1/leaderboard?select=*&order=total_score.desc&limit=250`, {
       method: 'GET',
       headers: {
         apikey: config.supabaseAnonKey,
@@ -163,17 +167,32 @@ export async function fetchGlobalLeaderboard(): Promise<LeaderboardEntry[]> {
     const rows = await res.json();
     if (!Array.isArray(rows)) return localEntries;
 
-    const cloudEntries: LeaderboardEntry[] = rows.map(r => ({
-      id: r.id || `cloud-${r.created_at}`,
-      gameId: r.game_id,
-      playerName: r.player_name,
-      callsign: r.callsign,
-      score: Number(r.score) || 0,
-      schoolOrOrg: r.school_or_org || '',
-      contactInfo: r.contact_info || '',
-      timestamp: r.created_at ? new Date(r.created_at).getTime() : Date.now(),
-      verified: r.verified !== false,
-    }));
+    const cloudEntries: LeaderboardEntry[] = rows.map(r => {
+      const flappy = Number(r.score_flappy) || 0;
+      const descent = Number(r.score_descent) || 0;
+      const telemetry = Number(r.score_telemetry) || 0;
+      const lander = Number(r.score_lander) || 0;
+      const collector = Number(r.score_collector) || 0;
+      const total = Number(r.total_score) || (flappy + descent + telemetry + lander + collector);
+
+      return {
+        id: `player-${r.callsign}`,
+        gameId: 'all',
+        playerName: r.player_name,
+        callsign: r.callsign,
+        score: total,
+        totalScore: total,
+        scoreFlappy: flappy,
+        scoreDescent: descent,
+        scoreTelemetry: telemetry,
+        scoreLander: lander,
+        scoreCollector: collector,
+        schoolOrOrg: r.school_or_org || '',
+        contactInfo: r.contact_info || '',
+        timestamp: r.updated_at ? new Date(r.updated_at).getTime() : Date.now(),
+        verified: true,
+      };
+    });
 
     return cloudEntries;
   } catch (err) {
@@ -182,13 +201,13 @@ export async function fetchGlobalLeaderboard(): Promise<LeaderboardEntry[]> {
   }
 }
 
-// Global Score Save
+// Global Score Save (Option A: Combined Best Scores, replaces if better)
 export async function saveGlobalScore(
   entry: Omit<LeaderboardEntry, 'id' | 'timestamp'>
 ): Promise<LeaderboardEntry> {
-  const existingEntries = getLeaderboard();
+  const cleanCallsign = (entry.callsign || 'PILOT').toUpperCase().trim().replace(/[^A-Z0-9_-]/g, '');
 
-  // Check if this new score beat any other pilot and trigger email notification
+  const existingEntries = getLeaderboard();
   try {
     checkAndNotifyOvertakenPilots(entry, existingEntries);
   } catch (notifErr) {
@@ -202,43 +221,111 @@ export async function saveGlobalScore(
   if (!config) return localEntry;
 
   try {
-    const payload = {
-      game_id: entry.gameId,
-      player_name: entry.playerName,
-      callsign: entry.callsign.toUpperCase().trim(),
-      score: entry.score,
-      school_or_org: entry.schoolOrOrg || null,
-      contact_info: entry.contactInfo || null,
-      verified: true,
-    };
+    // 1. Fetch existing player record from Supabase
+    const checkRes = await fetch(
+      `${config.supabaseUrl}/rest/v1/leaderboard?callsign=eq.${encodeURIComponent(cleanCallsign)}&limit=1`,
+      {
+        headers: {
+          apikey: config.supabaseAnonKey,
+          Authorization: `Bearer ${config.supabaseAnonKey}`,
+        },
+      }
+    );
 
-    const res = await fetch(`${config.supabaseUrl}/rest/v1/leaderboard`, {
-      method: 'POST',
-      headers: {
-        apikey: config.supabaseAnonKey,
-        Authorization: `Bearer ${config.supabaseAnonKey}`,
-        'Content-Type': 'application/json',
-        Prefer: 'return=representation',
-      },
-      body: JSON.stringify(payload),
-    });
+    let oldFlappy = 0;
+    let oldDescent = 0;
+    let oldTelemetry = 0;
+    let oldLander = 0;
+    let oldCollector = 0;
+    let playerExists = false;
 
-    if (res.ok) {
-      const data = await res.json();
-      if (Array.isArray(data) && data[0]) {
-        return {
-          id: data[0].id,
-          gameId: data[0].game_id,
-          playerName: data[0].player_name,
-          callsign: data[0].callsign,
-          score: data[0].score,
-          schoolOrOrg: data[0].school_or_org,
-          contactInfo: data[0].contact_info,
-          timestamp: new Date(data[0].created_at).getTime(),
-          verified: data[0].verified,
-        };
+    if (checkRes.ok) {
+      const existingRows = await checkRes.json();
+      if (Array.isArray(existingRows) && existingRows.length > 0) {
+        playerExists = true;
+        const r = existingRows[0];
+        oldFlappy = Number(r.score_flappy) || 0;
+        oldDescent = Number(r.score_descent) || 0;
+        oldTelemetry = Number(r.score_telemetry) || 0;
+        oldLander = Number(r.score_lander) || 0;
+        oldCollector = Number(r.score_collector) || 0;
       }
     }
+
+    // Option A: Only replace if the new score in this game is higher than their best!
+    const newFlappy = entry.gameId === 'flappy' ? Math.max(oldFlappy, entry.score) : oldFlappy;
+    const newDescent = entry.gameId === 'descent' ? Math.max(oldDescent, entry.score) : oldDescent;
+    const newTelemetry = entry.gameId === 'telemetry' ? Math.max(oldTelemetry, entry.score) : oldTelemetry;
+    const newLander = entry.gameId === 'lander' ? Math.max(oldLander, entry.score) : oldLander;
+    const newCollector = entry.gameId === 'collector' ? Math.max(oldCollector, entry.score) : oldCollector;
+    const newTotal = newFlappy + newDescent + newTelemetry + newLander + newCollector;
+
+    if (playerExists) {
+      // Update existing single row for this player
+      await fetch(
+        `${config.supabaseUrl}/rest/v1/leaderboard?callsign=eq.${encodeURIComponent(cleanCallsign)}`,
+        {
+          method: 'PATCH',
+          headers: {
+            apikey: config.supabaseAnonKey,
+            Authorization: `Bearer ${config.supabaseAnonKey}`,
+            'Content-Type': 'application/json',
+            Prefer: 'return=representation',
+          },
+          body: JSON.stringify({
+            player_name: entry.playerName,
+            school_or_org: entry.schoolOrOrg || null,
+            score_flappy: newFlappy,
+            score_descent: newDescent,
+            score_telemetry: newTelemetry,
+            score_lander: newLander,
+            score_collector: newCollector,
+            total_score: newTotal,
+            updated_at: new Date().toISOString(),
+          }),
+        }
+      );
+    } else {
+      // Insert first row for this player
+      await fetch(`${config.supabaseUrl}/rest/v1/leaderboard`, {
+        method: 'POST',
+        headers: {
+          apikey: config.supabaseAnonKey,
+          Authorization: `Bearer ${config.supabaseAnonKey}`,
+          'Content-Type': 'application/json',
+          Prefer: 'return=representation',
+        },
+        body: JSON.stringify({
+          callsign: cleanCallsign,
+          player_name: entry.playerName,
+          school_or_org: entry.schoolOrOrg || null,
+          score_flappy: newFlappy,
+          score_descent: newDescent,
+          score_telemetry: newTelemetry,
+          score_lander: newLander,
+          score_collector: newCollector,
+          total_score: newTotal,
+          updated_at: new Date().toISOString(),
+        }),
+      });
+    }
+
+    return {
+      id: `player-${cleanCallsign}`,
+      gameId: 'all',
+      playerName: entry.playerName,
+      callsign: cleanCallsign,
+      score: newTotal,
+      totalScore: newTotal,
+      scoreFlappy: newFlappy,
+      scoreDescent: newDescent,
+      scoreTelemetry: newTelemetry,
+      scoreLander: newLander,
+      scoreCollector: newCollector,
+      schoolOrOrg: entry.schoolOrOrg,
+      timestamp: Date.now(),
+      verified: true,
+    };
   } catch (err) {
     console.warn('Could not sync score to cloud DB:', err);
   }

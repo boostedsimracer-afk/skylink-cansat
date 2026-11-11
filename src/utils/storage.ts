@@ -19,19 +19,68 @@ export function getLeaderboard(): LeaderboardEntry[] {
 
 export function saveLeaderboardEntry(entry: Omit<LeaderboardEntry, 'id' | 'timestamp'>): LeaderboardEntry {
   const current = getLeaderboard();
-  const newEntry: LeaderboardEntry = {
-    ...entry,
-    id: 'entry-' + Date.now() + '-' + Math.random().toString(36).substring(2, 7),
-    timestamp: Date.now(),
-    verified: true,
-  };
+  const cleanCallsign = (entry.callsign || 'ANON').toUpperCase().trim().replace(/[^A-Z0-9_-]/g, '');
 
-  const updated = [newEntry, ...current];
+  const existingIdx = current.findIndex(e => e.callsign.toUpperCase().trim() === cleanCallsign);
+  let updatedRecord: LeaderboardEntry;
+
+  if (existingIdx >= 0) {
+    const existing = current[existingIdx];
+    const scoreFlappy = entry.gameId === 'flappy' ? Math.max(existing.scoreFlappy || 0, entry.score) : (existing.scoreFlappy || 0);
+    const scoreDescent = entry.gameId === 'descent' ? Math.max(existing.scoreDescent || 0, entry.score) : (existing.scoreDescent || 0);
+    const scoreTelemetry = entry.gameId === 'telemetry' ? Math.max(existing.scoreTelemetry || 0, entry.score) : (existing.scoreTelemetry || 0);
+    const scoreLander = entry.gameId === 'lander' ? Math.max(existing.scoreLander || 0, entry.score) : (existing.scoreLander || 0);
+    const scoreCollector = entry.gameId === 'collector' ? Math.max(existing.scoreCollector || 0, entry.score) : (existing.scoreCollector || 0);
+    const totalScore = scoreFlappy + scoreDescent + scoreTelemetry + scoreLander + scoreCollector;
+
+    updatedRecord = {
+      ...existing,
+      playerName: entry.playerName || existing.playerName,
+      schoolOrOrg: entry.schoolOrOrg || existing.schoolOrOrg,
+      contactInfo: entry.contactInfo || existing.contactInfo,
+      score: totalScore,
+      totalScore,
+      scoreFlappy,
+      scoreDescent,
+      scoreTelemetry,
+      scoreLander,
+      scoreCollector,
+      timestamp: Date.now(),
+    };
+    current[existingIdx] = updatedRecord;
+  } else {
+    const scoreFlappy = entry.gameId === 'flappy' ? entry.score : 0;
+    const scoreDescent = entry.gameId === 'descent' ? entry.score : 0;
+    const scoreTelemetry = entry.gameId === 'telemetry' ? entry.score : 0;
+    const scoreLander = entry.gameId === 'lander' ? entry.score : 0;
+    const scoreCollector = entry.gameId === 'collector' ? entry.score : 0;
+    const totalScore = scoreFlappy + scoreDescent + scoreTelemetry + scoreLander + scoreCollector;
+
+    updatedRecord = {
+      id: 'entry-' + cleanCallsign,
+      gameId: 'all',
+      callsign: cleanCallsign,
+      playerName: entry.playerName,
+      schoolOrOrg: entry.schoolOrOrg,
+      contactInfo: entry.contactInfo,
+      score: totalScore,
+      totalScore,
+      scoreFlappy,
+      scoreDescent,
+      scoreTelemetry,
+      scoreLander,
+      scoreCollector,
+      timestamp: Date.now(),
+      verified: true,
+    };
+    current.push(updatedRecord);
+  }
+
   try {
-    localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(updated));
+    localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(current));
   } catch {}
 
-  return newEntry;
+  return updatedRecord;
 }
 
 export function getSavedPlayerProfile(): PlayerProfile {

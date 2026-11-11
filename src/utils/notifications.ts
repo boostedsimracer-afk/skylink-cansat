@@ -4,7 +4,7 @@ import { getCloudConfig, getLocalAccounts } from './cloudDb';
 export interface BeatNotification {
   id: string;
   timestamp: number;
-  gameId: GameId;
+  gameId: GameId | 'all';
   gameTitle: string;
   overtakenCallsign: string;
   overtakenEmail: string;
@@ -79,7 +79,8 @@ export function saveNotificationToLog(notif: BeatNotification): void {
   } catch {}
 }
 
-const GAME_TITLES: Record<GameId, string> = {
+const GAME_TITLES: Record<GameId | 'all', string> = {
+  all: 'Overall Mission Standings',
   flappy: 'Flappy CanSat',
   descent: 'Can-Drop: Descent Mission',
   telemetry: 'Telemetry Jam',

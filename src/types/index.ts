@@ -2,10 +2,17 @@ export type GameId = 'flappy' | 'descent' | 'telemetry' | 'lander' | 'collector'
 
 export interface LeaderboardEntry {
   id: string;
-  gameId: GameId;
+  gameId: GameId | 'all';
   playerName: string;
   callsign: string;
   score: number;
+  totalScore?: number;
+  scoreFlappy?: number;
+  scoreDescent?: number;
+  scoreTelemetry?: number;
+  scoreLander?: number;
+  scoreCollector?: number;
+  displayScore?: number;
   contactInfo?: string;
   schoolOrOrg?: string;
   timestamp: number;

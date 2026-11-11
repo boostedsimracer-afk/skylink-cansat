@@ -39,8 +39,21 @@ export const LeaderboardSection: React.FC<LeaderboardSectionProps> = ({
   };
 
   const filteredEntries = entries
+    .map(entry => {
+      let displayScore = entry.totalScore ?? entry.score;
+      if (selectedTab === 'flappy') displayScore = entry.scoreFlappy ?? 0;
+      else if (selectedTab === 'descent') displayScore = entry.scoreDescent ?? 0;
+      else if (selectedTab === 'telemetry') displayScore = entry.scoreTelemetry ?? 0;
+      else if (selectedTab === 'lander') displayScore = entry.scoreLander ?? 0;
+      else if (selectedTab === 'collector') displayScore = entry.scoreCollector ?? 0;
+
+      return {
+        ...entry,
+        displayScore,
+      };
+    })
     .filter(entry => {
-      if (selectedTab !== 'all' && entry.gameId !== selectedTab) return false;
+      if (entry.displayScore <= 0) return false;
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         return (
@@ -50,7 +63,7 @@ export const LeaderboardSection: React.FC<LeaderboardSectionProps> = ({
       }
       return true;
     })
-    .sort((a, b) => b.score - a.score);
+    .sort((a, b) => b.displayScore - a.displayScore);
 
   const top1 = filteredEntries[0];
   const top2 = filteredEntries[1];
@@ -166,7 +179,7 @@ export const LeaderboardSection: React.FC<LeaderboardSectionProps> = ({
                   )}
                 </div>
                 <span className="text-sm font-extrabold text-slate-900 font-mono mt-0.5">
-                  {top2.score.toLocaleString()}
+                  {top2.displayScore.toLocaleString()}
                 </span>
                 <span className="text-[10px] text-slate-500 mt-1 font-sans">
                   {selectedTab === 'all' ? 'Overall 2nd Prize' : 'Runner-Up'}
@@ -195,7 +208,7 @@ export const LeaderboardSection: React.FC<LeaderboardSectionProps> = ({
                   )}
                 </div>
                 <span className="text-base font-extrabold text-rose-600 font-mono mt-0.5">
-                  {top1.score.toLocaleString()}
+                  {top1.displayScore.toLocaleString()}
                 </span>
                 <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full mt-1.5 font-sans">
                   🏆 {selectedTab === 'all' ? 'Overall 1st Prize' : 'Game 1st Prize'}
@@ -222,7 +235,7 @@ export const LeaderboardSection: React.FC<LeaderboardSectionProps> = ({
                   )}
                 </div>
                 <span className="text-sm font-extrabold text-slate-900 font-mono mt-0.5">
-                  {top3.score.toLocaleString()}
+                  {top3.displayScore.toLocaleString()}
                 </span>
                 <span className="text-[10px] text-slate-500 mt-1 font-sans">
                   {selectedTab === 'all' ? 'Overall 3rd Prize' : '3rd Place'}
@@ -274,14 +287,14 @@ export const LeaderboardSection: React.FC<LeaderboardSectionProps> = ({
                           )}
                         </div>
                         <span className="text-[10px] text-slate-400 block font-sans">
-                          {getGameLabel(entry.gameId)}
+                          {selectedTab === 'all' ? (entry.playerName || 'Overall Champion') : getGameLabel(selectedTab)}
                         </span>
                       </div>
                     </div>
 
                     <div className="text-right">
                       <span className="font-extrabold text-slate-900 font-mono text-sm block">
-                        {entry.score.toLocaleString()} pts
+                        {entry.displayScore.toLocaleString()} pts
                       </span>
                       <span className="text-[10px] text-slate-400">
                         {entry.schoolOrOrg || 'Independent'}
