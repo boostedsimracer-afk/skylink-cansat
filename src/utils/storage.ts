@@ -1,7 +1,7 @@
 import type { LeaderboardEntry, PlayerProfile } from '../types';
 
-const LEADERBOARD_KEY = 'skylink_leaderboard_v2';
-const PROFILE_KEY = 'skylink_player_profile_v2';
+const LEADERBOARD_KEY = 'skylink_leaderboard_v3';
+const PROFILE_KEY = 'skylink_player_profile_v3';
 
 const DEFAULT_ENTRIES: LeaderboardEntry[] = [];
 

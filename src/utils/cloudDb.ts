@@ -5,8 +5,8 @@ import { hashPin, verifyPin } from './crypto';
 import { checkAndNotifyOvertakenPilots } from './notifications';
 
 const CONFIG_KEY = 'skylink_supabase_config_v1';
-const ACCOUNTS_KEY = 'skylink_pilot_accounts_v1';
-const ACTIVE_PILOT_KEY = 'skylink_active_pilot_v1';
+const ACCOUNTS_KEY = 'skylink_pilot_accounts_v2';
+const ACTIVE_PILOT_KEY = 'skylink_active_pilot_v2';
 
 export const SUPABASE_SQL_SETUP = `-- ========================================================
 -- SKYLINK CANSAT 2026: SUPABASE DATABASE INITIALIZATION
