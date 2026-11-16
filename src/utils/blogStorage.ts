@@ -19,7 +19,7 @@ export interface BlogPost {
   };
 }
 
-const BLOG_KEY = 'skylink_team_blog_posts_v3';
+const BLOG_KEY = 'skylink_team_blog_posts_v5';
 
 export const DEFAULT_BLOG_POSTS: BlogPost[] = [
   {
@@ -240,17 +240,17 @@ export const DEFAULT_BLOG_POSTS: BlogPost[] = [
   },
   {
     id: '3d-printing-nov8',
-    sessionNumber: 'Technical Session #5 (CURRENT)',
+    sessionNumber: 'Technical Session #5',
     title: '3D Printing & Structural Fabrication at AUBH D-Lab',
     category: 'workshop',
-    date: 'Current Session • November 2026',
-    status: 'in_progress',
+    date: 'Completed • November 2026',
+    status: 'completed',
     trainerOrLocation: 'Khalid Engineer • AUBH D-Lab (Room E105)',
     author: 'Mohsin Akil',
     authorRole: 'Mechanical Lead',
-    tags: ['3D Printing', 'D-Lab', 'Fabrication', 'In Progress', 'Active'],
+    tags: ['3D Printing', 'D-Lab', 'Fabrication', 'Completed'],
     summary:
-      'Currently in progress: hands-on structural fabrication and CAD printing session at the AUBH D-Lab with Khalid Engineer. Slicing and 3D printing our modular CanSat chassis using high-impact PETG.',
+      'Completed hands-on structural fabrication and CAD printing session at the AUBH D-Lab with Khalid Engineer. Sliced and 3D printed our modular CanSat chassis using high-impact PETG.',
     fullReport: {
       objectives: [
         'Convert 3D CAD models into optimized G-code for additive manufacturing.',
@@ -259,88 +259,91 @@ export const DEFAULT_BLOG_POSTS: BlogPost[] = [
       ],
       completedMilestones: [
         'Selected PETG filament with 35% gyroid infill for maximum strength-to-weight ratio.',
-        'First test bulkheads and structural frame currently on the print bed.',
-        'Physical test-fit of Arduino Nano and battery bay to confirm dimensional clearances.',
+        'Test bulkheads and structural frame successfully printed and dimensionally checked.',
+        'Physical test-fit of Arduino Nano and battery bay to confirm tight clearances.',
       ],
       technicalDetails: [
         { label: 'Filament Material', value: 'PETG (Polyethylene Terephthalate Glycol)' },
         { label: 'Infill Pattern', value: '35% Gyroid (isotropic strength)' },
         { label: 'Layer Height', value: '0.2 mm' },
-        { label: 'Status', value: 'IN PROGRESS 🛠️' },
+        { label: 'Status', value: 'COMPLETED ✓' },
       ],
       quote:
         '"Fabricating at the AUBH D-Lab gives us precision manufacturing to ensure our electronics snap-fit securely into the 66mm rocket envelope."',
       nextSteps:
-        'Complete chassis printing, finish clean-up of bulkhead tabs, and proceed to parachute canopy geometry.',
+        'Transition directly into hands-on parachute fabrication and recovery rigging.',
     },
   },
   {
-    id: 'parachute-design-nov10',
-    sessionNumber: 'Technical Session #6 (Upcoming)',
-    title: 'Parachute Aerodynamics & Descent Rate Optimization',
+    id: 'parachute-workshop-nov17',
+    sessionNumber: 'Hands-On Workshop (Tomorrow)',
+    title: 'Parachute Hands-On Workshop & Assembly',
     category: 'workshop',
-    date: 'Upcoming Session • November 2026',
-    status: 'upcoming',
-    trainerOrLocation: 'AUBH Auditorium & D-Lab',
+    date: 'Tuesday, 17 November 2026 (Tomorrow)',
+    status: 'in_progress',
+    trainerOrLocation: 'AUBH D-Lab & Workshop Hall',
     author: 'Mohsin Akil',
-    authorRole: 'Mechanical Lead',
-    tags: ['Parachute', 'Aerodynamics', 'Upcoming', 'Descent Calculation'],
+    authorRole: 'Mechanical & Recovery Lead',
+    tags: ['Parachute', 'Workshop', 'Hands-On', 'Tuesday', 'Fabrication', 'Active'],
     summary:
-      'Scheduled next: engineering and calculating the recovery parachute canopy area to guarantee terminal descent velocity below the mandatory 8.0 m/s threshold.',
+      'Scheduled for tomorrow (Tuesday, Nov 17): Hands-on parachute fabrication and assembly workshop! Team SKYLINK will be cutting, rigging, and assembling our ripstop nylon recovery parachute canopy to achieve optimal descent rate (< 8.0 m/s).',
     fullReport: {
       objectives: [
-        'Apply aerodynamic drag equations ($v_t = \\sqrt{\\frac{2mg}{\\rho C_d A}}$) to size parachute canopy.',
-        'Ensure touchdown speed is between 6.0 m/s and 8.0 m/s for safe recovery and sensor preservation.',
-        'Design suspension line harness and test spill-hole venting for pitch stability.',
+        'Hands-on cutting and assembly of the cross/hexstar parachute canopy from ripstop nylon material.',
+        'Rigging suspension lines with high-tensile braided shroud cords and swivels to prevent line twists.',
+        'Practical deployment pack testing and shroud line tension checks for smooth chute release.',
+        'Calibrating terminal descent velocity to strictly remain under the 8.0 m/s competition limit.',
       ],
       completedMilestones: [
-        'Preliminary canopy surface area target: 0.178 m² for 285g mass.',
-        'Cross/Hexstar pattern template selected for anti-oscillation descent.',
+        'Canopy cutting template prepared according to aerodynamic area calculations (target descent: 6.7 m/s).',
+        'Ripstop nylon, shroud lines, and recovery harness staged for tomorrow\'s fabrication session.',
       ],
       technicalDetails: [
-        { label: 'Target Descent Speed', value: '6.7 m/s (< 8.0 m/s rule limit)' },
-        { label: 'Canopy Pattern', value: 'Hexstar / Cross Pattern' },
-        { label: 'Status', value: 'Scheduled / Upcoming ⏳' },
+        { label: 'Event Date', value: 'Tuesday, 17 Nov 2026 (Tomorrow)' },
+        { label: 'Format', value: 'Hands-On Practical Workshop 🪂' },
+        { label: 'Target Descent', value: '6.7 m/s (< 8.0 m/s rule limit)' },
+        { label: 'Location', value: 'AUBH D-Lab & Workshop Hall' },
       ],
       quote:
-        '"Our aerodynamic calculations aim for a 6.7 m/s steady glide, providing a safe margin under the 8 m/s limit."',
+        '"Tomorrow\'s hands-on workshop is where the physics and CAD equations turn into physical fabric and flight-ready recovery gear."',
       nextSteps:
-        'Fabricate parachute canopy from ripstop nylon and prepare for the PDR defense presentation.',
+        'Complete parachute assembly and packing fit checks inside the upper CanSat payload cylinder.',
     },
   },
   {
-    id: 'pdr-presentation-nov15',
-    sessionNumber: 'Milestone Review #2 (Upcoming)',
-    title: 'PDR Presentation Defense: Preliminary Design Review',
+    id: 'pdr-presentation-postponed',
+    sessionNumber: 'Milestone Review #2 (Postponed)',
+    title: 'PDR Presentation Defense (Postponed — Date TBA)',
     category: 'presentation',
-    date: 'Scheduled: Sun, 15 November 2026',
+    date: 'Postponed — Date TBA (Unconfirmed)',
     status: 'upcoming',
     trainerOrLocation: 'BSA Judging Panel • AUBH Auditorium',
     author: 'Osama Zahid',
     authorRole: 'Project Manager',
-    tags: ['PDR Defense', 'Judges Presentation', 'Milestone', 'Upcoming'],
+    tags: ['PDR Defense', 'Postponed', 'Date TBA', 'Under Preparation'],
     summary:
-      'Upcoming milestone: presenting Team SKYLINK’s Preliminary Design Review (PDR) to the Bahrain Space Agency judges on Sunday, 15 November 2026.',
+      'Official Update: The Preliminary Design Review (PDR) presentation defense has been postponed to a date to be confirmed by the Bahrain Space Agency (BSA). The exact rescheduled date is currently unconfirmed. Team SKYLINK is using this extra preparation window to conduct hands-on parachute manufacturing and finalize our slide deck.',
     fullReport: {
       objectives: [
-        'Defend all subsystem designs before the Bahrain Space Agency technical panel.',
+        'Defend all subsystem designs before the Bahrain Space Agency technical panel once new date is announced.',
         'Demonstrate that mass (< 350g) and power (> 3.5 hr endurance) strictly comply with competition constraints.',
         'Showcase telemetry packet architecture, 433 MHz LoRa link margin, and parachute descent calculations.',
       ],
       completedMilestones: [
-        'PDR presentation slide deck currently being assembled by the team leads.',
+        'PDR presentation slide deck assembled and rehearsed by all team leads.',
         'Subsystem CAD models and electrical block diagrams compiled for the judging panel.',
+        'Engineering budgets validated while awaiting confirmed scheduling from BSA.',
       ],
       technicalDetails: [
         { label: 'Milestone', value: 'Preliminary Design Review (PDR)' },
-        { label: 'Scheduled Date', value: 'Sunday, 15 November 2026' },
-        { label: 'Target Mass Ceiling', value: '< 350 grams' },
-        { label: 'Status', value: 'Under Preparation ⏳' },
+        { label: 'Original Date', value: '15 November 2026' },
+        { label: 'Current Status', value: 'Postponed — Date TBA ⏳' },
+        { label: 'Supervising Body', value: 'Bahrain Space Agency (BSA)' },
       ],
       quote:
-        '"The PDR defense is our next major milestone. We are assembling our complete engineering budgets and CAD renders to defend our flight architecture."',
+        '"The postponement gives our engineering team valuable time to fabricate physical hardware and run hands-on parachute validation."',
       nextSteps:
-        'Finalize slide rehearsals and submit PDR deliverables before Sunday’s review.',
+        'Stand by for official BSA schedule announcement while advancing hands-on parachute fabrication.',
     },
   },
 ];
