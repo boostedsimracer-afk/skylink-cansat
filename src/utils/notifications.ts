@@ -51,7 +51,7 @@ export function getEmailConfig(): EmailServiceConfig | null {
   // Production default credentials for SKYLINK UTB Bahrain CanSat
   return {
     serviceId: 'service_dmujblr',
-    templateId: '1ja2yd9',
+    templateId: 'template_xx84p79',
     publicKey: '3P9K2A8Ma7tqeYmCn',
   };
 }
