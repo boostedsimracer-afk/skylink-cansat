@@ -208,17 +208,15 @@ export async function saveGlobalScore(
   const cleanCallsign = (entry.callsign || 'PILOT').toUpperCase().trim().replace(/[^A-Z0-9_-]/g, '');
 
   const existingEntries = getLeaderboard();
-  try {
-    checkAndNotifyOvertakenPilots(entry, existingEntries);
-  } catch (notifErr) {
-    console.warn('Notification check error:', notifErr);
-  }
 
   // Always save locally first so gameplay is never blocked by network latency
   const localEntry = saveLeaderboardEntry(entry);
 
   const config = getCloudConfig();
-  if (!config) return localEntry;
+  if (!config) {
+    checkAndNotifyOvertakenPilots(entry, existingEntries).catch(() => {});
+    return localEntry;
+  }
 
   try {
     // 1. Fetch existing player record from Supabase
@@ -250,6 +248,21 @@ export async function saveGlobalScore(
         oldLander = Number(r.score_lander) || 0;
         oldCollector = Number(r.score_collector) || 0;
       }
+    }
+
+    const oldScoreForThisGame =
+      entry.gameId === 'flappy' ? oldFlappy :
+      entry.gameId === 'descent' ? oldDescent :
+      entry.gameId === 'telemetry' ? oldTelemetry :
+      entry.gameId === 'lander' ? oldLander :
+      entry.gameId === 'collector' ? oldCollector : 0;
+
+    // Check if player set a new personal record in this game
+    const isNewPersonalBest = !playerExists || entry.score > oldScoreForThisGame;
+    if (isNewPersonalBest) {
+      checkAndNotifyOvertakenPilots(entry, existingEntries).catch(notifErr => {
+        console.warn('Notification check error:', notifErr);
+      });
     }
 
     // Option A: Only replace if the new score in this game is higher than their best!

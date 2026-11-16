@@ -88,6 +88,24 @@ const GAME_TITLES: Record<GameId | 'all', string> = {
   collector: 'Data Catcher',
 };
 
+export function extractGameScore(e: LeaderboardEntry, gameId: GameId | 'all'): number {
+  switch (gameId) {
+    case 'flappy':
+      return Number(e.scoreFlappy ?? (e.gameId === 'flappy' ? e.score : 0)) || 0;
+    case 'descent':
+      return Number(e.scoreDescent ?? (e.gameId === 'descent' ? e.score : 0)) || 0;
+    case 'telemetry':
+      return Number(e.scoreTelemetry ?? (e.gameId === 'telemetry' ? e.score : 0)) || 0;
+    case 'lander':
+      return Number(e.scoreLander ?? (e.gameId === 'lander' ? e.score : 0)) || 0;
+    case 'collector':
+      return Number(e.scoreCollector ?? (e.gameId === 'collector' ? e.score : 0)) || 0;
+    case 'all':
+    default:
+      return Number(e.totalScore ?? e.score) || 0;
+  }
+}
+
 /**
  * Checks if a newly submitted score beat an existing player's ranking,
  * and if so, prepares and dispatches an alert email to them.
@@ -96,16 +114,65 @@ export async function checkAndNotifyOvertakenPilots(
   newEntry: Omit<LeaderboardEntry, 'id' | 'timestamp'>,
   existingEntries: LeaderboardEntry[]
 ): Promise<BeatNotification | null> {
-  const gameEntries = existingEntries
-    .filter(e => e.gameId === newEntry.gameId && e.callsign !== newEntry.callsign)
+  let pool = existingEntries;
+  const config = getCloudConfig();
+
+  // If cloud config exists, attempt to pull latest cloud scores for global accuracy
+  if (config) {
+    try {
+      const res = await fetch(`${config.supabaseUrl}/rest/v1/leaderboard?select=*&limit=250`, {
+        headers: {
+          apikey: config.supabaseAnonKey,
+          Authorization: `Bearer ${config.supabaseAnonKey}`,
+        },
+      });
+      if (res.ok) {
+        const rows = await res.json();
+        if (Array.isArray(rows) && rows.length > 0) {
+          pool = rows.map((r: any): LeaderboardEntry => ({
+            id: `player-${r.callsign}`,
+            gameId: 'all',
+            callsign: r.callsign,
+            playerName: r.player_name || r.callsign,
+            score: Number(r.total_score) || 0,
+            totalScore: Number(r.total_score) || 0,
+            scoreFlappy: Number(r.score_flappy) || 0,
+            scoreDescent: Number(r.score_descent) || 0,
+            scoreTelemetry: Number(r.score_telemetry) || 0,
+            scoreLander: Number(r.score_lander) || 0,
+            scoreCollector: Number(r.score_collector) || 0,
+            schoolOrOrg: r.school_or_org || '',
+            contactInfo: r.contact_info || '',
+            timestamp: Date.now(),
+            verified: true,
+          }));
+        }
+      }
+    } catch {
+      // Fall back to passed existing entries
+    }
+  }
+
+  const cleanChallenger = (newEntry.callsign || '').toUpperCase().trim();
+
+  // Find all other pilots who recorded a score in this specific game (or overall)
+  const candidates = pool
+    .filter(e => (e.callsign || '').toUpperCase().trim() !== cleanChallenger)
+    .map(e => ({
+      entry: e,
+      score: extractGameScore(e, newEntry.gameId),
+    }))
+    .filter(c => c.score > 0)
     .sort((a, b) => b.score - a.score);
 
-  if (gameEntries.length === 0) return null;
+  if (candidates.length === 0) return null;
 
-  // Find pilot(s) whose score this new entry just beat
-  // E.g. Find the highest player that this newEntry passed
-  const overtaken = gameEntries.find(e => e.score < newEntry.score);
-  if (!overtaken) return null;
+  // Find the highest pilot whose score this newEntry just beat
+  const overtakenCandidate = candidates.find(c => c.score < newEntry.score);
+  if (!overtakenCandidate) return null;
+
+  const overtaken = overtakenCandidate.entry;
+  const overtakenScore = overtakenCandidate.score;
 
   // Find overtaken pilot's contact email (from entry, local accounts, or Supabase profiles)
   let email = (overtaken.contactInfo || '').trim();
@@ -118,26 +185,23 @@ export async function checkAndNotifyOvertakenPilots(
   }
 
   // If still not found, query live Supabase profiles table
-  if (!email.includes('@')) {
+  if (!email.includes('@') && config) {
     try {
-      const config = getCloudConfig();
-      if (config) {
-        const res = await fetch(
-          `${config.supabaseUrl}/rest/v1/profiles?callsign=eq.${encodeURIComponent(overtaken.callsign)}&select=email,contact_info&limit=1`,
-          {
-            headers: {
-              apikey: config.supabaseAnonKey,
-              Authorization: `Bearer ${config.supabaseAnonKey}`,
-            },
-          }
-        );
-        if (res.ok) {
-          const rows = await res.json();
-          if (Array.isArray(rows) && rows[0]) {
-            const foundEmail = (rows[0].email || rows[0].contact_info || '').trim();
-            if (foundEmail.includes('@')) {
-              email = foundEmail;
-            }
+      const res = await fetch(
+        `${config.supabaseUrl}/rest/v1/profiles?callsign=eq.${encodeURIComponent(overtaken.callsign)}&select=email,contact_info&limit=1`,
+        {
+          headers: {
+            apikey: config.supabaseAnonKey,
+            Authorization: `Bearer ${config.supabaseAnonKey}`,
+          },
+        }
+      );
+      if (res.ok) {
+        const rows = await res.json();
+        if (Array.isArray(rows) && rows[0]) {
+          const foundEmail = (rows[0].email || rows[0].contact_info || '').trim();
+          if (foundEmail.includes('@')) {
+            email = foundEmail;
           }
         }
       }
@@ -181,7 +245,7 @@ export async function checkAndNotifyOvertakenPilots(
             game_title: gameTitle,
             game: gameTitle,
             challenger_score: newEntry.score.toLocaleString(),
-            old_score: overtaken.score.toLocaleString(),
+            old_score: overtakenScore.toLocaleString(),
             site_url: typeof window !== 'undefined' ? window.location.href : 'https://boostedsimracer-afk.github.io/skylink-cansat/',
           },
         }),
@@ -203,4 +267,53 @@ export async function checkAndNotifyOvertakenPilots(
 
   saveNotificationToLog(notification);
   return notification;
+}
+
+/**
+ * Direct test dispatch utility to verify EmailJS configuration
+ */
+export async function sendTestEmail(testEmail: string): Promise<{ ok: boolean; message: string }> {
+  const emailConfig = getEmailConfig();
+  if (!emailConfig) {
+    return { ok: false, message: 'EmailJS credentials not configured.' };
+  }
+
+  try {
+    const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        service_id: emailConfig.serviceId,
+        template_id: emailConfig.templateId,
+        user_id: emailConfig.publicKey,
+        template_params: {
+          to_email: testEmail,
+          email: testEmail,
+          to_callsign: 'TEST_PILOT',
+          callsign: 'TEST_PILOT',
+          challenger_callsign: 'VIPER_ONE',
+          challenger: 'VIPER_ONE',
+          game_title: 'Flappy CanSat',
+          game: 'Flappy CanSat',
+          challenger_score: '1,500',
+          old_score: '1,200',
+          site_url: typeof window !== 'undefined' ? window.location.href : 'https://boostedsimracer-afk.github.io/skylink-cansat/',
+        },
+      }),
+    });
+
+    if (response.ok) {
+      return { ok: true, message: `Test email sent successfully to ${testEmail}!` };
+    } else {
+      const err = await response.text();
+      return { ok: false, message: `EmailJS responded with error: ${err}` };
+    }
+  } catch (err: any) {
+    return { ok: false, message: `Network error: ${err.message || err}` };
+  }
+}
+
+// Expose on window for easy developer/admin verification in browser console
+if (typeof window !== 'undefined') {
+  (window as any).skylinkSendTestEmail = sendTestEmail;
 }
