@@ -181,8 +181,8 @@ export const LeaderboardSection: React.FC<LeaderboardSectionProps> = ({
                 <span className="text-sm font-extrabold text-slate-900 font-mono mt-0.5">
                   {top2.displayScore.toLocaleString()}
                 </span>
-                <span className="text-[10px] text-slate-500 mt-1 font-sans">
-                  {selectedTab === 'all' ? 'Overall 2nd Prize 🥈' : 'Rank #2'}
+                <span className="text-[10px] text-slate-600 mt-1 font-sans font-medium">
+                  {selectedTab === 'all' ? '🥈 2nd: Pen & Notebook' : 'Rank #2'}
                 </span>
               </div>
             ) : <div />}
@@ -210,8 +210,8 @@ export const LeaderboardSection: React.FC<LeaderboardSectionProps> = ({
                 <span className="text-base font-extrabold text-rose-600 font-mono mt-0.5">
                   {top1.displayScore.toLocaleString()}
                 </span>
-                <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full mt-1.5 font-sans">
-                  🏆 {selectedTab === 'all' ? 'Overall 1st Prize 🥇' : 'Game Leader'}
+                <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-2.5 py-0.5 rounded-full mt-1.5 font-sans">
+                  🏆 {selectedTab === 'all' ? '1st: Custom T-Shirt 🥇' : 'Game Leader'}
                 </span>
               </div>
             )}
@@ -237,8 +237,8 @@ export const LeaderboardSection: React.FC<LeaderboardSectionProps> = ({
                 <span className="text-sm font-extrabold text-slate-900 font-mono mt-0.5">
                   {top3.displayScore.toLocaleString()}
                 </span>
-                <span className="text-[10px] text-slate-500 mt-1 font-sans">
-                  {selectedTab === 'all' ? 'Overall 3rd Prize 🥉' : 'Rank #3'}
+                <span className="text-[10px] text-slate-600 mt-1 font-sans font-medium">
+                  {selectedTab === 'all' ? '🥉 3rd: Custom Mug' : 'Rank #3'}
                 </span>
               </div>
             ) : <div />}
