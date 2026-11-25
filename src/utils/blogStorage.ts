@@ -19,7 +19,7 @@ export interface BlogPost {
   };
 }
 
-const BLOG_KEY = 'skylink_team_blog_posts_v5';
+const BLOG_KEY = 'skylink_team_blog_posts_v6';
 
 export const DEFAULT_BLOG_POSTS: BlogPost[] = [
   {
@@ -276,17 +276,17 @@ export const DEFAULT_BLOG_POSTS: BlogPost[] = [
   },
   {
     id: 'parachute-workshop-nov17',
-    sessionNumber: 'Hands-On Workshop (Tomorrow)',
+    sessionNumber: 'Technical Session #6',
     title: 'Parachute Hands-On Workshop & Assembly',
     category: 'workshop',
-    date: 'Tuesday, 17 November 2026 (Tomorrow)',
-    status: 'in_progress',
+    date: 'November 2026',
+    status: 'completed',
     trainerOrLocation: 'AUBH D-Lab & Workshop Hall',
     author: 'Mohsin Akil',
     authorRole: 'Mechanical & Recovery Lead',
-    tags: ['Parachute', 'Workshop', 'Hands-On', 'Tuesday', 'Fabrication', 'Active'],
+    tags: ['Parachute', 'Workshop', 'Hands-On', 'Fabrication', 'Completed'],
     summary:
-      'Scheduled for tomorrow (Tuesday, Nov 17): Hands-on parachute fabrication and assembly workshop! Team SKYLINK will be cutting, rigging, and assembling our ripstop nylon recovery parachute canopy to achieve optimal descent rate (< 8.0 m/s).',
+      'Successfully completed our hands-on parachute manufacturing and canopy rigging workshop! Fabricated the ripstop nylon cross/hexstar canopy, balanced shroud line lengths, and verified terminal descent parameters to stay under 8.0 m/s.',
     fullReport: {
       objectives: [
         'Hands-on cutting and assembly of the cross/hexstar parachute canopy from ripstop nylon material.',
@@ -296,54 +296,92 @@ export const DEFAULT_BLOG_POSTS: BlogPost[] = [
       ],
       completedMilestones: [
         'Canopy cutting template prepared according to aerodynamic area calculations (target descent: 6.7 m/s).',
-        'Ripstop nylon, shroud lines, and recovery harness staged for tomorrow\'s fabrication session.',
+        'Ripstop nylon, shroud lines, and recovery harness fabricated and packed.',
+        'Tension tests confirmed smooth, snag-free parachute extraction from payload bay.',
       ],
       technicalDetails: [
-        { label: 'Event Date', value: 'Tuesday, 17 Nov 2026 (Tomorrow)' },
-        { label: 'Format', value: 'Hands-On Practical Workshop 🪂' },
+        { label: 'Event Date', value: 'November 2026' },
+        { label: 'Format', value: 'Hands-On Workshop Completed ✓' },
         { label: 'Target Descent', value: '6.7 m/s (< 8.0 m/s rule limit)' },
         { label: 'Location', value: 'AUBH D-Lab & Workshop Hall' },
       ],
       quote:
-        '"Tomorrow\'s hands-on workshop is where the physics and CAD equations turn into physical fabric and flight-ready recovery gear."',
+        '"Our physical parachute fabrication matches our aerodynamic model calculations, providing a safe, predictable descent for our flight electronics."',
       nextSteps:
-        'Complete parachute assembly and packing fit checks inside the upper CanSat payload cylinder.',
+        'Pack parachute into flight configuration and integrate into the main chassis.',
     },
   },
   {
-    id: 'pdr-presentation-postponed',
-    sessionNumber: 'Milestone Review #2 (Postponed)',
-    title: 'PDR Presentation Defense (Postponed — Date TBA)',
+    id: 'pdr-defense-completed',
+    sessionNumber: 'Milestone Review #2',
+    title: 'PDR Defense & BSA Technical Panel Sign-Off',
     category: 'presentation',
-    date: 'Postponed — Date TBA (Unconfirmed)',
-    status: 'upcoming',
+    date: 'November 2026',
+    status: 'completed',
     trainerOrLocation: 'BSA Judging Panel • AUBH Auditorium',
     author: 'Osama Zahid',
     authorRole: 'Project Manager',
-    tags: ['PDR Defense', 'Postponed', 'Date TBA', 'Under Preparation'],
+    tags: ['PDR Defense', 'Completed', 'Approved', 'Passed', 'BSA Review'],
     summary:
-      'Official Update: The Preliminary Design Review (PDR) presentation defense has been postponed to a date to be confirmed by the Bahrain Space Agency (BSA). The exact rescheduled date is currently unconfirmed. Team SKYLINK is using this extra preparation window to conduct hands-on parachute manufacturing and finalize our slide deck.',
+      'Officially passed our Preliminary Design Review (PDR)! Team SKYLINK presented our comprehensive engineering package to the Bahrain Space Agency jury. All structural CAD models, sensor interfaces, and power/mass budgets received approval with zero major non-conformances.',
     fullReport: {
       objectives: [
-        'Defend all subsystem designs before the Bahrain Space Agency technical panel once new date is announced.',
+        'Defend complete CanSat architecture and secondary payload science mission before the BSA panel.',
         'Demonstrate that mass (< 350g) and power (> 3.5 hr endurance) strictly comply with competition constraints.',
-        'Showcase telemetry packet architecture, 433 MHz LoRa link margin, and parachute descent calculations.',
+        'Receive formal authorization from judges to advance to the Critical Design Review (CDR) phase.',
       ],
       completedMilestones: [
-        'PDR presentation slide deck assembled and rehearsed by all team leads.',
-        'Subsystem CAD models and electrical block diagrams compiled for the judging panel.',
-        'Engineering budgets validated while awaiting confirmed scheduling from BSA.',
+        'PDR presentation defense successfully conducted and approved by the BSA panel.',
+        'Subsystem CAD models, mass/power budgets, and telemetry link calculations signed off.',
+        'Officially authorized to advance to the Critical Design Review (CDR) phase!',
       ],
       technicalDetails: [
         { label: 'Milestone', value: 'Preliminary Design Review (PDR)' },
-        { label: 'Original Date', value: '15 November 2026' },
-        { label: 'Current Status', value: 'Postponed — Date TBA ⏳' },
-        { label: 'Supervising Body', value: 'Bahrain Space Agency (BSA)' },
+        { label: 'Status', value: 'PASSED & APPROVED ✅' },
+        { label: 'Jury Assessment', value: 'Zero Corrective Action Notices' },
+        { label: 'Next Step', value: 'Critical Design Review (CDR)' },
       ],
       quote:
-        '"The postponement gives our engineering team valuable time to fabricate physical hardware and run hands-on parachute validation."',
+        '"Passing PDR marks a huge turning point for Team SKYLINK. Our design is locked in and officially approved — now it is all hands on deck for CDR flight hardware."',
       nextSteps:
-        'Stand by for official BSA schedule announcement while advancing hands-on parachute fabrication.',
+        'Begin full CDR electrical integration, PCB sensor soldering, and drop test preparations.',
+    },
+  },
+  {
+    id: 'cdr-phase-kickoff',
+    sessionNumber: 'Milestone Review #3 (CURRENT)',
+    title: 'CDR Kickoff: Critical Design Review & Flight Hardware Integration',
+    category: 'engineering',
+    date: 'Current Phase • Late November 2026',
+    status: 'in_progress',
+    trainerOrLocation: 'Engineering Lab & Prototyping Workshop',
+    author: 'Osama Zahid & Engineering Team',
+    authorRole: 'Project Manager & Subsystem Leads',
+    tags: ['CDR', 'Critical Design', 'In Progress', 'Active', 'Flight Integration'],
+    summary:
+      'Team SKYLINK is officially in the Critical Design Review (CDR) phase! Transitioning from preliminary models to final flight-ready hardware: custom circuit soldering, sensor telemetry integration, and physical drop test validation in preparation for the December Launch Day.',
+    fullReport: {
+      objectives: [
+        'Complete final hardware assembly for the flight-model CanSat.',
+        'Solder custom sensor power distribution shield and secure radio antenna mounts.',
+        'Execute pre-CDR tether drop tests to record real-time barometric telemetry downlink.',
+        'Prepare the comprehensive CDR presentation slide deck for the upcoming BSA jury review.',
+      ],
+      completedMilestones: [
+        'PETG flight bulkheads and structural brackets fabricated with reinforced tolerances.',
+        'Primary sensor suite (pressure, temperature, IMU, camera) successfully integrated into the flight stack.',
+        'Flight firmware updated with automated descent detection and recovery beacon triggers.',
+      ],
+      technicalDetails: [
+        { label: 'Milestone', value: 'Critical Design Review (CDR)' },
+        { label: 'Phase', value: 'ACTIVE / IN PROGRESS 🛠️' },
+        { label: 'Primary Focus', value: 'Flight Hardware & Firmware Lock' },
+        { label: 'Target Launch', value: 'December 2026' },
+      ],
+      quote:
+        '"CDR is the final engineering gate before launch. Every wire, solder joint, and code loop must be flight-certified."',
+      nextSteps:
+        'Perform full integrated system burn-in tests and finalize CDR presentation deliverables.',
     },
   },
 ];

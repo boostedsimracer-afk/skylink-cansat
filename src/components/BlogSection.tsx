@@ -46,6 +46,26 @@ export const BlogSection: React.FC<BlogSectionProps> = ({ onOpenFullBlog }) => {
     }
   };
 
+  const getStatusBadge = (status: BlogPost['status']) => {
+    switch (status) {
+      case 'in_progress':
+        return {
+          label: 'Active Phase ⚡',
+          cls: 'text-rose-600 bg-rose-50 border-rose-200 animate-pulse',
+        };
+      case 'upcoming':
+        return {
+          label: 'Upcoming ⏳',
+          cls: 'text-amber-700 bg-amber-50 border-amber-200',
+        };
+      default:
+        return {
+          label: 'Completed ✓',
+          cls: 'text-emerald-600 bg-emerald-50 border-emerald-200',
+        };
+    }
+  };
+
   return (
     <section id="blog" className="py-16 px-4 sm:px-12 max-w-5xl mx-auto font-sans">
       {/* Header */}
@@ -58,7 +78,7 @@ export const BlogSection: React.FC<BlogSectionProps> = ({ onOpenFullBlog }) => {
           Mission Blog & Engineering Logs 🛰️
         </h2>
         <p className="text-slate-500 text-xs sm:text-sm max-w-xl mx-auto font-medium">
-          Follow Team SKYLINK’s journey through every workshop, technical defense, and prototype milestone completed until the week of PDR.
+          Follow Team SKYLINK’s journey through every workshop, technical defense, and prototype milestone — from MCR & PDR completion into our active Critical Design Review (CDR) phase.
         </p>
 
         {/* Outreach Evidence Links (Linktree & Official Email) */}
@@ -109,7 +129,7 @@ export const BlogSection: React.FC<BlogSectionProps> = ({ onOpenFullBlog }) => {
               : 'bg-white text-slate-600 hover:bg-slate-50 border border-rose-100'
           }`}
         >
-          All Completed Milestones ({posts.length})
+          All Mission Logs ({posts.length})
         </button>
         <button
           onClick={() => {
@@ -135,7 +155,7 @@ export const BlogSection: React.FC<BlogSectionProps> = ({ onOpenFullBlog }) => {
               : 'bg-white text-slate-600 hover:bg-slate-50 border border-rose-100'
           }`}
         >
-          📊 Presentations & PDR
+          📊 Milestone Reviews
         </button>
         <button
           onClick={() => {
@@ -154,8 +174,9 @@ export const BlogSection: React.FC<BlogSectionProps> = ({ onOpenFullBlog }) => {
 
       {/* Blog Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
-        {filteredPosts.slice(0, 6).map(post => {
+        {[...filteredPosts].reverse().slice(0, 6).map(post => {
           const cat = getCategoryBadge(post.category);
+          const statusBadge = getStatusBadge(post.status);
 
           return (
             <div
@@ -180,8 +201,8 @@ export const BlogSection: React.FC<BlogSectionProps> = ({ onOpenFullBlog }) => {
                     )}
                   </div>
 
-                  <span className="text-[10px] font-bubbly font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
-                    Completed ✓
+                  <span className={`text-[10px] font-bubbly font-bold border px-2.5 py-0.5 rounded-full ${statusBadge.cls}`}>
+                    {statusBadge.label}
                   </span>
                 </div>
 
@@ -271,8 +292,8 @@ export const BlogSection: React.FC<BlogSectionProps> = ({ onOpenFullBlog }) => {
                     {selectedPost.sessionNumber}
                   </span>
                 )}
-                <span className="text-[10px] font-bubbly font-bold px-2.5 py-0.5 rounded-full border bg-emerald-50 text-emerald-700 border-emerald-200 ml-auto">
-                  Completed & Verified ✓
+                <span className={`text-[10px] font-bubbly font-bold px-2.5 py-0.5 rounded-full border ml-auto ${getStatusBadge(selectedPost.status).cls}`}>
+                  {getStatusBadge(selectedPost.status).label}
                 </span>
               </div>
 

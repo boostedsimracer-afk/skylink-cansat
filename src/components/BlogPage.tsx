@@ -94,14 +94,14 @@ export const BlogPage: React.FC<BlogPageProps> = ({ onBackToArcade }) => {
           Team SKYLINK Mission Blog 🛰️
         </h1>
         <p className="text-slate-600 text-xs sm:text-sm max-w-xl mx-auto leading-relaxed">
-          Documenting team progress, technical workshops, and our active parachute fabrication toward the rescheduled Preliminary Design Review.
+          Documenting team progress, technical workshops, and our active transition into the Critical Design Review (CDR) following our successful PDR defense.
         </p>
 
         {/* Milestone Progress Bar */}
         <div className="mt-8 p-5 bg-white/95 border border-rose-100 rounded-3xl shadow-sm text-left">
           <div className="flex items-center justify-between mb-3 text-xs font-bubbly font-bold text-slate-800">
             <span>Competition Milestones Progress</span>
-            <span className="text-rose-600 font-bold">Active: Parachute Hands-On Workshop (Tomorrow, Tue 17 Nov) 🪂</span>
+            <span className="text-rose-600 font-bold">Active Phase: Critical Design Review (CDR) ⚙️</span>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center font-sans text-[11px]">
@@ -110,23 +110,23 @@ export const BlogPage: React.FC<BlogPageProps> = ({ onBackToArcade }) => {
               <span className="text-slate-400 text-[10px]">Sun 1 Nov</span>
               <span className="text-emerald-600 font-bold text-[10px] block mt-0.5">COMPLETED ✓</span>
             </div>
-            <div className="bg-amber-50 border-2 border-amber-300 rounded-xl p-2.5 shadow-sm">
-              <span className="text-amber-800 font-bold block">2. PDR Review</span>
-              <span className="text-amber-600 text-[10px]">Date TBA</span>
-              <span className="text-amber-700 font-bold text-[10px] block mt-0.5">POSTPONED ⏳</span>
+            <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-2.5 shadow-sm">
+              <span className="text-emerald-700 font-bold block">2. PDR Review</span>
+              <span className="text-slate-400 text-[10px]">Mid Nov</span>
+              <span className="text-emerald-600 font-bold text-[10px] block mt-0.5">COMPLETED ✓</span>
             </div>
             <div className="bg-rose-50 border-2 border-rose-400 rounded-xl p-2.5 shadow-sm">
-              <span className="text-rose-700 font-bold block">Parachute Workshop</span>
-              <span className="text-rose-600 text-[10px] font-semibold">Tue 17 Nov (Tomorrow)</span>
-              <span className="text-rose-600 font-bold text-[10px] block mt-0.5 animate-pulse">HANDS-ON 🪂</span>
+              <span className="text-rose-700 font-bold block">3. CDR Review</span>
+              <span className="text-rose-600 text-[10px] font-semibold">Late Nov (Now)</span>
+              <span className="text-rose-600 font-bold text-[10px] block mt-0.5 animate-pulse">UNDERWAY ⚙️</span>
             </div>
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 opacity-80">
-              <span className="text-slate-700 font-bold block">3. CDR Review</span>
-              <span className="text-slate-400 text-[10px]">Date TBD</span>
+              <span className="text-slate-700 font-bold block">4. SIR / FRR</span>
+              <span className="text-slate-400 text-[10px]">Early Dec</span>
               <span className="text-slate-400 font-bold text-[10px] block mt-0.5">UPCOMING</span>
             </div>
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 opacity-60 col-span-2 sm:col-span-1">
-              <span className="text-slate-700 font-bold block">4. Launch Day 🚀</span>
+              <span className="text-slate-700 font-bold block">5. Launch Day 🚀</span>
               <span className="text-slate-400 text-[10px]">December 2026</span>
               <span className="text-slate-400 text-[10px] block mt-0.5">FINALS</span>
             </div>
@@ -197,7 +197,7 @@ export const BlogPage: React.FC<BlogPageProps> = ({ onBackToArcade }) => {
           <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
-            placeholder="Search parachute, PDR, CAD..."
+            placeholder="Search CDR, PDR, parachute, CAD..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             className="w-full bg-white border border-rose-100 rounded-full pl-9 pr-4 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-rose-400 shadow-sm"
@@ -236,11 +236,11 @@ export const BlogPage: React.FC<BlogPageProps> = ({ onBackToArcade }) => {
                   <div className="flex items-center gap-2">
                     {post.status === 'in_progress' ? (
                       <span className="text-[10px] font-bubbly font-bold text-rose-600 bg-rose-50 border border-rose-200 px-2.5 py-0.5 rounded-full animate-pulse">
-                        Tomorrow 🪂
+                        Active Phase ⚡
                       </span>
                     ) : post.status === 'upcoming' ? (
                       <span className="text-[10px] font-bubbly font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full">
-                        Postponed ⏳
+                        Upcoming ⏳
                       </span>
                     ) : (
                       <span className="text-[10px] font-bubbly font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
